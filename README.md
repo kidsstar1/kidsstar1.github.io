@@ -1,1 +1,1 @@
-# kidsstar1.github.io
+# exercise page
