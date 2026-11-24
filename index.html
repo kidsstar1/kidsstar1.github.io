@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#101827">
-<title>8세트 고강도 서킷 인터벌 타이머</title>
+<title>8세트 현실 페이싱 서킷 타이머</title>
 <style>
   :root {
     --bg-idle: #101827;
@@ -41,7 +41,6 @@
     backdrop-filter: blur(8px);
   }
 
-  /* 상단 헤더 */
   .top-bar { display: flex; justify-content: space-between; align-items: center; }
   .app-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
   .badge { background: rgba(255,255,255,0.16); padding: 4px 11px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
@@ -145,9 +144,8 @@
 </head>
 <body>
 <main>
-  <!-- 상단 타이틀 -->
   <div class="top-bar">
-    <div class="app-title">🏋️ 8세트 서킷 타이머</div>
+    <div class="app-title">🏋️ 8세트 현실 페이싱 타이머</div>
     <span class="badge" id="setBadge">1 / 8 세트</span>
   </div>
 
@@ -190,15 +188,15 @@
   <section class="panel">
     <div class="progress-meta">
       <span id="roundText">진행: 0 / 56 운동</span>
-      <span id="totalRemainText">남은 시간 40:20</span>
+      <span id="totalRemainText">남은 시간 56:50</span>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
 
     <div class="timer-display">
       <div class="phase-tag" id="phaseTag">READY</div>
       <div class="exercise-title" id="exerciseName">시작 버튼을 눌러주세요</div>
-      <div class="reps-subtitle" id="repsText">7종 운동 × 8세트</div>
-      <div class="clock" id="clock">00:00</div>
+      <div class="reps-subtitle" id="repsText">현실 페이싱 배분 · 7종 × 8세트</div>
+      <div class="clock" id="clock">01:30</div>
 
       <div class="quick-actions">
         <button class="chip-btn" onclick="addSeconds(10)">+10초 더</button>
@@ -206,7 +204,7 @@
       </div>
     </div>
 
-    <div class="next-banner" id="nextBanner">다음: 1. 점핑 버피 (30개)</div>
+    <div class="next-banner" id="nextBanner">다음: 1. 점핑 버피 (30개 · 90초)</div>
 
     <div class="main-controls">
       <button class="ctrl-btn" onclick="prevExercise()">◀ 이전</button>
@@ -219,7 +217,7 @@
   <!-- 운동 순서 목록 -->
   <section class="panel">
     <div class="section-title">
-      <span>📋 현재 세트 운동 순서</span>
+      <span>📋 현실 페이싱 동작별 시간</span>
       <span style="font-size:0.78rem;color:var(--muted)">터치 시 해당 동작으로 이동</span>
     </div>
     <ul class="routine-list" id="routineList"></ul>
@@ -227,15 +225,15 @@
 
   <!-- 세부 설정 -->
   <section class="panel">
-    <div class="section-title"><span>⚙️ 타이머 설정</span></div>
+    <div class="section-title"><span>⚙️ 휴식 및 안내 설정</span></div>
     <div class="settings-grid">
       <div class="setting-item">
-        <label for="restInput">운동 간 휴식 (초)</label>
-        <input id="restInput" type="number" min="0" max="120" value="10" onchange="updateTotalRemain()">
+        <label for="restInput">동작 간 휴식 (초)</label>
+        <input id="restInput" type="number" min="0" max="120" value="15" onchange="updateTotalRemain()">
       </div>
       <div class="setting-item">
         <label for="setRestInput">세트 간 휴식 (초)</label>
-        <input id="setRestInput" type="number" min="0" max="300" value="30" onchange="updateTotalRemain()">
+        <input id="setRestInput" type="number" min="0" max="300" value="45" onchange="updateTotalRemain()">
       </div>
     </div>
     <div class="setting-row">
@@ -247,13 +245,13 @@
 
 <script>
   const exercises = [
-    { name: "점핑 버피", reps: "30개", sec: 65 },
-    { name: "트위스트 플랭크", reps: "20개", sec: 30 },
-    { name: "크런치", reps: "20개", sec: 30 },
-    { name: "푸쉬업 어깨터치", reps: "20개", sec: 40 },
-    { name: "팔벌려 뛰기", reps: "30개", sec: 30 },
-    { name: "런지", reps: "20개", sec: 35 },
-    { name: "점핑 스쿼트", reps: "20개", sec: 30 }
+    { name: "점핑 버피", reps: "30개", sec: 90 },
+    { name: "트위스트 플랭크", reps: "20개", sec: 50 },
+    { name: "크런치", reps: "20개", sec: 45 },
+    { name: "푸쉬업 어깨터치", reps: "20개", sec: 60 },
+    { name: "팔벌려 뛰기", reps: "30개", sec: 40 },
+    { name: "런지", reps: "20개", sec: 55 },
+    { name: "점핑 스쿼트", reps: "20개", sec: 50 }
   ];
 
   const TOTAL_SETS = 8;
@@ -436,7 +434,7 @@
   function getRestTime(completedIndex) {
     const isSetEnd = (completedIndex % exercises.length === exercises.length - 1);
     const val = isSetEnd ? Number($("setRestInput").value) : Number($("restInput").value);
-    return Math.max(0, isNaN(val) ? 10 : val);
+    return Math.max(0, isNaN(val) ? 15 : val);
   }
 
   function updateTotalRemain() {
@@ -490,9 +488,9 @@
     if (phase === "idle") {
       $("phaseTag").textContent = "READY";
       $("exerciseName").textContent = "시작 버튼을 눌러주세요";
-      $("repsText").textContent = `1세트 · 첫 동작: ${exercises[0].name}`;
+      $("repsText").textContent = `1세트 · 첫 동작: ${exercises[0].name} (${exercises[0].reps})`;
       $("clock").textContent = formatTime(exercises[0].sec);
-      $("nextBanner").textContent = `다음: 1. ${exercises[0].name} (${exercises[0].reps})`;
+      $("nextBanner").textContent = `다음: 1. ${exercises[0].name} (${exercises[0].reps} · ${exercises[0].sec}초)`;
     } else if (phase === "work") {
       $("phaseTag").textContent = "🔥 WORK";
       $("exerciseName").textContent = `${(index % exercises.length) + 1}. ${ex.name}`;
@@ -501,7 +499,7 @@
       const restSec = getRestTime(index);
       const nextEx = exercises[(index + 1) % exercises.length];
       $("nextBanner").textContent = index < TOTAL_EXERCISES - 1
-        ? `다음: ${restSec > 0 ? `휴식 (${restSec}초) 후 ` : ""}${nextEx.name}`
+        ? `다음: ${restSec > 0 ? `휴식 (${restSec}초) 후 ` : ""}${nextEx.name} (${nextEx.reps})`
         : "마지막 운동입니다!";
     } else if (phase === "rest") {
       const isSetRest = (index % exercises.length === 0);
@@ -509,7 +507,7 @@
       $("exerciseName").textContent = isSetRest ? `${currentSet - 1}세트 완료 휴식` : "전환 휴식";
       $("repsText").textContent = `다음 준비: ${ex.name} (${ex.reps})`;
       $("clock").textContent = formatTime(remaining);
-      $("nextBanner").textContent = `다음: ${(index % exercises.length) + 1}. ${ex.name} (${ex.sec}초)`;
+      $("nextBanner").textContent = `다음: ${(index % exercises.length) + 1}. ${ex.name} (${ex.reps} · ${ex.sec}초)`;
     } else if (phase === "done") {
       $("phaseTag").textContent = "🎉 COMPLETE";
       $("exerciseName").textContent = "8세트 완주 성공!";
