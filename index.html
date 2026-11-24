@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101827">
+<title>운동 8세트 인터벌 타이머</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2738;--muted:#9eacc0;--accent:#64d7b0;--yellow:#ffd166;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f7fb;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;padding:16px}
+main{max-width:680px;margin:auto}.panel{background:var(--panel);border:1px solid #304057;border-radius:18px;padding:16px;margin:12px 0}
+h1{font-size:1.35rem;margin:4px 0 8px}h2{font-size:1rem;margin:0 0 12px}.muted{color:var(--muted);font-size:.88rem}
+.video{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#080d16}
+input,button{font:inherit;border-radius:12px;border:1px solid #40516b;padding:12px;background:#111c2c;color:#fff}
+input{width:100%;margin:6px 0}button{cursor:pointer;font-weight:700}button.primary{background:var(--accent);color:#08251c;border:0}button:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.status{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:.9rem}
+.exercise{text-align:center;padding:12px 0}.exercise .name{font-size:1.4rem;font-weight:800}.timer{font-size:clamp(4.5rem,22vw,8rem);font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--accent);margin:14px 0}
+.big{font-size:1.05rem}.progress{height:9px;background:#344258;border-radius:20px;overflow:hidden;margin:12px 0}.bar{height:100%;background:var(--accent);width:0%;transition:width .2s}
+ul{list-style:none;padding:0;margin:0}li{display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid #344258;gap:12px}li.current{color:var(--accent);font-weight:800}li.done{color:#8495aa;text-decoration:line-through}
+.smallbtn{padding:8px 10px;font-size:.88rem}.hint{background:#142f32;border-radius:12px;padding:10px;color:#b7f5df;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>🏋️ 8세트 운동 인터벌 타이머</h1>
+<p class="muted">운동 7종 × 8세트 · 음성 명령: “그만” / “10초 더” (영어 stop / more 10 seconds도 지원)</p>
+
+<section class="panel">
+<h2>🎬 운동 영상</h2>
+<iframe id="player" class="video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="운동 영상"></iframe>
+<input id="videoUrl" placeholder="유튜브 URL 붙여넣기 (선택)">
+<div class="row">
+<button id="loadVideo" class="primary">영상 불러오기</button>
+<button id="sampleVideo">추천 영상 검색</button>
+</div>
+<p class="muted">추천 버튼은 유튜브에서 ‘전신 맨몸 서킷 운동 자세’ 검색 결과를 엽니다. 영상 음성이 음성 안내를 방해할 수 있으니 영상은 음소거를 권장합니다.</p>
+</section>
+
+<section class="panel">
+<div class="status"><span id="roundLabel">준비 전 · 0 / 56</span><span id="phaseLabel">대기</span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="exercise">
+<div class="name" id="exerciseName">시작 버튼을 눌러주세요</div>
+<div class="muted" id="reps">1세트 / 8세트</div>
+<div class="timer" id="clock">00:00</div>
+<div class="big" id="instruction">운동별 권장 시간으로 자동 진행합니다.</div>
+</div>
+<div class="row">
+<button class="primary" id="start">▶ 시작</button>
+<button id="pause" disabled>Ⅱ 일시정지</button>
+<button id="skip" disabled>다음 운동</button>
+<button id="reset">↺ 처음부터</button>
+</div>
+<div class="row" style="margin-top:8px">
+<button id="plus10" class="smallbtn" disabled>+10초</button>
+<button id="finish" class="smallbtn" disabled>이 운동 그만</button>
+<button id="voice" class="smallbtn">🎙 음성명령 켜기</button>
+</div>
+<p class="hint" id="voiceStatus">음성 명령은 버튼을 눌러 마이크 권한을 허용한 뒤 사용하세요. 화면이 켜진 상태에서 Chrome 사용을 권장합니다.</p>
+</section>
+
+<section class="panel">
+<h2>📋 오늘의 운동 순서</h2>
+<ul id="list"></ul>
+<p class="muted">운동 시간은 반복 횟수와 동작 속도를 고려한 시작 권장치입니다. 개인 체력에 맞춰 조절하세요.</p>
+</section>
+<section class="panel">
+<h2>⚙️ 설정</h2>
+<label class="muted">운동 사이 전환 휴식 (초)</label><input id="rest" type="number" min="0" max="120" value="15">
+<label class="muted">세트 사이 추가 휴식 (초)</label><input id="setRest" type="number" min="0" max="300" value="60">
+<label class="muted">10초 남았을 때 음성 안내</label>
+<div class="row"><button id="speechOn" class="primary">안내 켜짐</button><button id="speechOff">안내 끄기</button></div>
+<p class="muted">화면 잠금/브라우저 백그라운드 상태에서는 휴대폰 설정에 따라 타이머·음성 인식이 중단될 수 있습니다. 운동 중에는 주변을 확인하고 무리하지 마세요.</p>
+</section>
+</main>
+<script>
+const exercises=[
+ {name:"점핑 버피",reps:"30개",sec:60},{name:"트위스트 플랭크",reps:"20개",sec:40},
+ {name:"크런치",reps:"20개",sec:40},{name:"푸쉬업 어깨터치",reps:"20개",sec:45},
+ {name:"팔벌려 뛰기",reps:"30개",sec:30},{name:"런지",reps:"20개",sec:40},
+ {name:"점핑 스쿼트",reps:"20개",sec:40}
+];
+const total=56; let index=0,remaining=0,running=false,paused=false,phase="idle",interval=null,voiceEnabled=true,recognition=null,voiceActive=false;
+const $=id=>document.getElementById(id);
+function speak(t){if(!voiceEnabled||!("speechSynthesis"in window))return; speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";u.rate=1.05;speechSynthesis.speak(u)}
+function current(){return exercises[index%7]}
+function renderList(){ $("list").innerHTML="";exercises.forEach((e,i)=>{let li=document.createElement("li");li.id="item"+i;li.innerHTML=`<span>${i+1}. ${e.name} (${e.reps})</span><span>${e.sec}초</span>`;$("list").appendChild(li)})}
+function update(){
+ let e=current();$("exerciseName").textContent=phase==="done"?"운동 완료!":phase==="rest"?"휴식":phase==="idle"?"시작 버튼을 눌러주세요":e.name;
+ $("reps").textContent=phase==="done"?"총 8세트 완료":`${Math.floor(index/7)+1}세트 / 8세트 · ${e.reps}`;
+ $("clock").textContent=`${String(Math.floor(remaining/60)).padStart(2,"0")}:${String(remaining%60).padStart(2,"0")}`;
+ $("phaseLabel").textContent=({idle:"대기",work:"운동",rest:"휴식",done:"완료"})[phase];
+ $("roundLabel").textContent=`${Math.min(index+1,total)} / ${total} 운동`;
+ $("bar").style.width=(index/total*100)+"%";
+ exercises.forEach((_,i)=>{let li=$("item"+i);li.className=(phase!=="done"&&index%7===i)?"current":""});
+ $("pause").disabled=!running;$("skip").disabled=!running;$("plus10").disabled=!running;$("finish").disabled=!running;
+ $("start").disabled=running||phase==="done";$("pause").textContent=paused?"▶ 이어하기":"Ⅱ 일시정지";
+}
+function clear(){if(interval){clearInterval(interval);interval=null}}
+function beginWork(){if(index>=total){complete();return}phase="work";remaining=current().sec;update();speak(`${current().name}, ${current().reps} 시작합니다.`);runClock()}
+function runClock(){clear();running=true;paused=false;update();interval=setInterval(()=>{
+ if(remaining>0){remaining--;if(remaining===10)speak("10초 남았습니다.");update()}
+ if(remaining<=0){clear();if(phase==="work"){speak("운동 시간이 끝났습니다.");nextAfterWork()}else if(phase==="rest"){beginWork()}}
+},1000)}
+function nextAfterWork(){
+ if(index>=total-1){index=total;complete();return}
+ let wasSetEnd=(index%7===6);index++;
+ phase="rest";remaining=wasSetEnd?Math.max(0,Number($("setRest").value)||0):Math.max(0,Number($("rest").value)||0);
+ update();speak(wasSetEnd?"한 세트 완료. 세트 휴식입니다.":"휴식 시간입니다.");
+ if(remaining===0)beginWork();else runClock();
+}
+function complete(){clear();running=false;paused=false;phase="done";remaining=0;$("bar").style.width="100%";update();$("instruction").textContent="수고하셨습니다! 물을 마시고 호흡을 정리하세요.";speak("총 8세트 운동을 완료했습니다. 수고하셨습니다!")}
+function skip(){if(!running)return;clear();if(phase==="rest"){beginWork();return}nextAfterWork()}
+function start(){if(phase==="done"){reset();}if(phase==="idle"){index=0;beginWork()}else if(paused){runClock()} }
+function pause(){if(!running)return;if(!paused){clear();paused=true;running=false;update();speak("일시정지")}else runClock()}
+function reset(){clear();index=0;remaining=0;running=false;paused=false;phase="idle";$("instruction").textContent="운동별 권장 시간으로 자동 진행합니다.";update()}
+function add10(){if(running){remaining+=10;update();speak("10초 추가했습니다.")}}
+function finish(){if(!running)return;clear();if(phase==="rest"){beginWork()}else nextAfterWork()}
+$("start").onclick=start;$("pause").onclick=pause;$("skip").onclick=skip;$("reset").onclick=reset;$("plus10").onclick=add10;$("finish").onclick=finish;
+$("speechOn").onclick=()=>{voiceEnabled=true;speak("음성 안내를 켰습니다.")};$("speechOff").onclick=()=>{voiceEnabled=false;speechSynthesis?.cancel()};
+$("loadVideo").onclick=()=>{let url=$("videoUrl").value.trim();let id=null;try{let u=new URL(url);if(u.hostname.includes("youtu.be"))id=u.pathname.slice(1);else if(u.hostname.includes("youtube.com")){id=u.searchParams.get("v");if(!id&&u.pathname.includes("/embed/"))id=u.pathname.split("/embed/")[1].split("/")[0]}}catch(e){}
+ if(id)$("player").src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?playsinline=1";else alert("유효한 유튜브 영상 URL을 입력해주세요.")};
+$("sampleVideo").onclick=()=>window.open("https://www.youtube.com/results?search_query=%EC%A0%84%EC%8B%A0+%EB%A7%A8%EB%AA%B8+%EC%84%9C%ED%82%B7+%EC%9A%B4%EB%8F%99+%EC%9E%90%EC%84%B8","_blank");
+function startVoice(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){$("voiceStatus").textContent="이 브라우저는 음성 인식을 지원하지 않습니다. Android Chrome에서 다시 시도하거나 화면 버튼을 사용하세요.";return}
+ if(recognition){try{recognition.stop()}catch(e){}}
+ recognition=new SR();recognition.lang="ko-KR";recognition.continuous=true;recognition.interimResults=false;
+ recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;let t=e.results[i][0].transcript.toLowerCase().replace(/\s+/g,"");$("voiceStatus").textContent="인식: "+e.results[i][0].transcript;
+ if(/그만|스톱|stop|skip|다음/.test(t)){finish()}
+ else if(/10초더|십초더|10초추가|more10seconds|more10second|add10seconds/.test(t)){add10()}
+ }};
+ recognition.onerror=e=>{$("voiceStatus").textContent="음성 인식 오류: "+e.error+" · 마이크 권한과 인터넷 연결을 확인하세요."};
+ recognition.onend=()=>{if(voiceActive){try{recognition.start()}catch(e){}}};
+ try{recognition.start();voiceActive=true;$("voiceStatus").textContent="🎙 듣는 중: “그만” 또는 “10초 더”라고 말하세요.";$("voice").textContent="🎙 음성명령 끄기"}catch(e){$("voiceStatus").textContent="마이크를 시작하지 못했습니다."}
+}
+function stopVoice(){voiceActive=false;if(recognition)try{recognition.stop()}catch(e){}$("voice").textContent="🎙 음성명령 켜기";$("voiceStatus").textContent="음성 명령이 꺼졌습니다."}
+$("voice").onclick=()=>voiceActive?stopVoice():startVoice();
+renderList();update();
+</script>
+</body></html>
