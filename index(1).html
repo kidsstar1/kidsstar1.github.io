@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>주 3회 60분 맨몸 체지방 감량 &amp; 근력 유지 트레이너 v3</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: rgba(30, 41, 59, 0.88);
+    --border: rgba(148, 163, 184, 0.24);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #10b981;
+    --blue: #3b82f6;
+    --yellow: #fbbf24;
+    --red: #f43f5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 12px;
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+  body.mode-strength { background-color: #111827; }
+  body.mode-hiit { background-color: #1f121b; }
+  body.mode-rest { background-color: #0f2338; }
+  body.mode-done { background-color: #102a24; }
+
+  main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 11px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 13px 15px;
+    backdrop-filter: blur(10px);
+  }
+
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+  h1 { font-size: 1.12rem; font-weight: 900; letter-spacing: -0.02em; }
+  .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .profile-pill {
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+  .streak-pill {
+    background: rgba(251, 191, 36, 0.16);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: #fde68a;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+  .sub-desc { color: var(--muted); font-size: 0.8rem; margin-top: 5px; line-height: 1.4; }
+
+  .day-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 10px; }
+  .day-tab {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 9px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .day-tab .d-title { font-size: 0.88rem; font-weight: 800; display: block; color: var(--text); }
+  .day-tab .d-sub { font-size: 0.71rem; display: block; margin-top: 2px; }
+  .day-tab.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .day-tab.active .d-sub { color: #6ee7b7; font-weight: 700; }
+  .day-tab.completed::after {
+    content: "✔";
+    position: absolute;
+    top: 5px; right: 7px;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 900;
+  }
+
+  /* 유틸리티 컨트롤 바 */
+  .util-bar {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 0.8rem;
+  }
+  .voice-status { display: flex; align-items: center; gap: 7px; color: #cbd5e1; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; }
+  .dot.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35);opacity:.65} }
+  .util-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+  .mini-toggle {
+    background: rgba(255,255,255,0.12); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 9px; border-radius: 9px; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+  }
+  .mini-toggle.active { background: var(--accent); color: #022c22; border-color: var(--accent); }
+
+  /* =========================================================
+     가시성 대폭 강화된 풀사이즈 인체 코칭 가이드 카드
+  ========================================================= */
+  .guide-panel-box {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(110, 231, 183, 0.3);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .guide-box-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .guide-box-label {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #6ee7b7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .target-pill {
+    background: rgba(244, 63, 94, 0.22);
+    color: #fda4af;
+    border: 1px solid rgba(244, 63, 94, 0.45);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+  .guide-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .guide-toggle-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .guide-toggle-btn.active {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: #60a5fa;
+    color: #bfdbfe;
+  }
+
+  /* 큰 화면 상하/좌우 반응형: 멀리서도 한눈에 보이는 시범 스테이지 */
+  .guide-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  @media (min-width: 580px) {
+    .guide-content {
+      grid-template-columns: 270px 1fr;
+      align-items: stretch;
+    }
+  }
+
+  .pose-stage {
+    width: 100%;
+    height: 215px;
+    background: radial-gradient(circle at 50% 42%, #1e293b 0%, #020617 100%);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pose-stage svg {
+    width: 100%;
+    height: 100%;
+  }
+  .stage-hud-top {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+  }
+  .phase-banner {
+    background: rgba(16, 185, 129, 0.24);
+    border: 1px solid rgba(16, 185, 129, 0.55);
+    color: #a7f3d0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+  .phase-banner.push {
+    background: rgba(251, 191, 36, 0.24);
+    border-color: rgba(251, 191, 36, 0.6);
+    color: #fde68a;
+  }
+  .rep-badge {
+    background: rgba(15, 23, 42, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #e2e8f0;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+  .stage-hud-bottom {
+    position: absolute;
+    bottom: 7px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+  .legend-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.78);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .legend-dot i {
+    width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; display: inline-block;
+  }
+
+  .howto-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .howto-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .howto-steps {
+    list-style: decimal;
+    padding-left: 17px;
+    font-size: 0.82rem;
+    line-height: 1.48;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cue-inline {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: rgba(251, 191, 36, 0.12);
+    border-left: 3px solid var(--yellow);
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: #fde68a;
+    line-height: 1.38;
+  }
+
+  /* 타이머 중앙부 */
+  .meta-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; }
+  .progress-wrap { height: 8px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.25s ease; }
+
+  .timer-center { text-align: center; padding: 2px 0 8px; }
+  .block-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+    background: rgba(255,255,255,0.14);
+  }
+  .block-badge.strength { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+  .block-badge.hiit { background: rgba(244, 63, 94, 0.25); color: #fda4af; }
+  .block-badge.rest { background: rgba(14, 165, 233, 0.25); color: #7dd3fc; }
+
+  .current-move { font-size: 1.62rem; font-weight: 900; line-height: 1.22; margin-bottom: 4px; word-break: keep-all; }
+  .current-spec { font-size: 0.96rem; color: var(--yellow); font-weight: 700; margin-bottom: 4px; }
+
+  .clock {
+    font-size: clamp(4.2rem, 19vw, 6.2rem);
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    margin: 6px 0 10px;
+  }
+  .clock.warn { color: var(--red); }
+
+  .quick-chips { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
+  .chip {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .chip:active { transform: scale(0.96); }
+
+  .next-line {
+    background: rgba(15, 23, 42, 0.65);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.84rem;
+    color: #cbd5e1;
+    text-align: center;
+    margin-bottom: 11px;
+  }
+
+  .ctrl-grid { display: grid; grid-template-columns: 1fr 2.2fr 1fr 1fr; gap: 8px; }
+  .btn {
+    border: none; border-radius: 12px; padding: 13px 6px;
+    font-size: 0.92rem; font-weight: 800; color: var(--text);
+    background: rgba(255,255,255,0.14); cursor: pointer;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.primary { background: var(--accent); color: #022c22; font-size: 1.05rem; }
+  .btn.primary.running { background: var(--red); color: #fff; }
+
+  /* 세션 구성표 */
+  .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sec-title { font-size: 1rem; font-weight: 800; }
+  .sec-note { font-size: 0.76rem; color: var(--muted); }
+  .step-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .step-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 9px 11px; border-radius: 11px; background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255,255,255,0.06); font-size: 0.88rem; cursor: pointer;
+  }
+  .step-item.active-step { border-color: var(--accent); background: rgba(16, 185, 129, 0.14); font-weight: 800; }
+  .step-item.done-step { opacity: 0.52; text-decoration: line-through; }
+  .step-left { display: flex; flex-direction: column; gap: 2px; }
+  .step-name { font-weight: 700; }
+  .step-meta { font-size: 0.76rem; color: var(--muted); }
+  .step-time { font-weight: 800; color: var(--yellow); white-space: nowrap; font-size: 0.85rem; }
+
+  .guide-grid { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 0.84rem; line-height: 1.5; color: #cbd5e1; }
+  @media (min-width: 600px) { .guide-grid { grid-template-columns: 1fr 1fr; } }
+  .guide-card { background: rgba(15, 23, 42, 0.5); padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+  .guide-card strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <div class="header-top">
+      <div>
+        <h1>🔥 주 3회 60분 맨몸 체지방 감량 &amp; 근력 유지</h1>
+        <p class="sub-desc">실루엣 인체 코칭 가이드 · 음성: “10초” / “20초” / “그만”</p>
+      </div>
+      <div class="pill-group">
+        <span class="profile-pill">174cm · 79kg</span>
+        <span class="streak-pill" id="streakBadge">누적 완료 0회</span>
+      </div>
+    </div>
+
+    <div class="day-tabs" id="dayTabs">
+      <button class="day-tab active" onclick="selectDay(0)">
+        <span class="d-title">DAY 1 (월)</span>
+        <span class="d-sub">하체·푸시 맨몸 + HIIT</span>
+      </button>
+      <button class="day-tab" onclick="selectDay(1)">
+        <span class="d-title">DAY 2 (수)</span>
+        <span class="d-sub">등·어깨 맨몸 + 서킷</span>
+      </button>
+      <button class="day-tab" onclick="selectDay(2)">
+        <span class="d-title">DAY 3 (금)</span>
+        <span class="d-sub">전신 맨몸 + 피니셔</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 음성 및 사운드 바 -->
+  <div class="panel util-bar">
+    <div class="voice-status">
+      <span class="dot" id="micDot"></span>
+      <span id="voiceMsg">음성 대기 (“10초” / “20초” / “그만”)</span>
+    </div>
+    <div class="util-btns">
+      <button class="mini-toggle" id="voiceBtn" onclick="toggleVoice()">🎙 음성 켜기</button>
+      <button class="mini-toggle active" id="ttsBtn" onclick="toggleTTS()">🔊 안내 켜짐</button>
+      <button class="mini-toggle" id="metroBtn" onclick="toggleMetro()">🥁 템포 박자</button>
+    </div>
+  </div>
+
+  <!-- 메인 타이머 패널 -->
+  <section class="panel">
+    <!-- 타이머 위 풀사이즈 인체 실루엣 시범 카드 -->
+    <div class="guide-panel-box">
+      <div class="guide-box-top">
+        <span class="guide-box-label">
+          <span>🧍 자세 시범</span>
+          <span class="target-pill" id="targetMusclePill">허벅지 · 엉덩이</span>
+        </span>
+        <div class="guide-controls">
+          <button class="guide-toggle-btn" id="slowBtn" onclick="toggleSlowMotion()">🐢 0.5x 슬로우</button>
+          <button class="guide-toggle-btn" id="guideToggleBtn" onclick="toggleGuideBox()">접기 ▲</button>
+        </div>
+      </div>
+
+      <div class="guide-content" id="guideContent">
+        <div class="pose-stage" id="poseStage"></div>
+        <div class="howto-box">
+          <div class="howto-title" id="howtoTitle">운동 방법</div>
+          <ol class="howto-steps" id="howtoSteps"></ol>
+          <div class="cue-inline" id="cueInline"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <span id="stepCounter">단계 1 / 0</span>
+      <span id="kcalEst">예상 소모 0 kcal</span>
+      <span id="remainTotal">남은 시간 60:00</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div class="timer-center">
+      <span class="block-badge" id="blockBadge">READY</span>
+      <div class="current-move" id="moveTitle">시작 버튼을 눌러주세요</div>
+      <div class="current-spec" id="moveSpec">선택한 요일 루틴이 약 60분간 진행됩니다</div>
+      <div class="clock" id="clock">00:00</div>
+
+      <div class="quick-chips">
+        <button class="chip" onclick="addSec(10)">+10초 (“10초”)</button>
+        <button class="chip" onclick="addSec(20)">+20초 (“20초”)</button>
+        <button class="chip" onclick="skipStep()">그만 (다음)</button>
+      </div>
+    </div>
+
+    <div class="next-line" id="nextLine">다음 단계 준비 중...</div>
+
+    <div class="ctrl-grid">
+      <button class="btn" onclick="prevStep()">◀ 이전</button>
+      <button class="btn primary" id="startBtn" onclick="toggleRun()">▶ 시작</button>
+      <button class="btn" onclick="skipStep()">다음 ▶</button>
+      <button class="btn" onclick="resetSession()">↺ 초기화</button>
+    </div>
+  </section>
+
+  <!-- 선택된 요일 전체 단계 -->
+  <section class="panel">
+    <div class="sec-head">
+      <span class="sec-title" id="listTitle">DAY 1 맨몸 상세 스케줄</span>
+      <span class="sec-note">항목 터치 시 즉시 이동</span>
+    </div>
+    <ul class="step-list" id="stepList"></ul>
+  </section>
+
+  <!-- 맨몸 체지방 감량 운용 팁 -->
+  <section class="panel">
+    <div class="sec-head">
+      <span class="sec-title">📌 174cm / 79kg 맨몸 감량 운용 가이드</span>
+    </div>
+    <div class="guide-grid">
+      <div class="guide-card">
+        <strong>1. 입체 실루엣 시범 &amp; 0.5x 슬로우 모드</strong>
+        어느 부위에 힘이 들어가는지 <strong>붉은색 활성 근육 하이라이트</strong>와 상단 단계 배지(예: “천천히 앉기 → 힘껏 일어서기”)로 즉시 확인할 수 있습니다. 자세가 헷갈릴 땐 <strong>🐢 0.5x 슬로우</strong>를 눌러 천천히 따라 해보세요.
+      </div>
+      <div class="guide-card">
+        <strong>2. “10초” / “20초” 음성 제어</strong>
+        운동 중 <strong>“10초”</strong>를 말하면 10초, <strong>“20초”</strong>를 말하면 20초가 추가됩니다. 화면이 꺼지지 않도록 시작 시 자동으로 화면 켜짐(Wake Lock)이 작동합니다.
+      </div>
+      <div class="guide-card">
+        <strong>3. 중간 이탈 복구 &amp; 완주 기록</strong>
+        운동 도중 실수로 새로고침하거나 앱을 나갔다 돌아와도 진행 중인 요일·단계·남은 시간이 자동 복원되며, 완주 시 누적 횟수가 저장됩니다.
+      </div>
+      <div class="guide-card">
+        <strong>4. 감량 효율 극대화 팁</strong>
+        실제 소모 열량은 체중·운동 강도·휴식 시간에 따라 달라집니다. 감량은 무리한 절식보다 지속 가능한 식사 조절과 충분한 회복을 함께 유지하세요.
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // =========================================================================
+  // 1. 입체 인체 실루엣 + 활성 근육 하이라이트 + 동작 단계 코칭 렌더러
+  //    좌표계: viewBox="0 0 240 165", 바닥 y=148
+  // =========================================================================
+  const POSES = {
+    // 1. 템포 스쿼트
+    squat: {
+      cycleMs: 4200,
+      target: "허벅지 앞·뒤 · 엉덩이",
+      muscle: "legs", // legs | chest | shoulder | core | back | full
+      arrows: "downup",
+      frames: [
+        { t: 0.00, phase: "1. 준비 (허리 곧게)", push: false, head:[118,28], neck:[118,41], sh:[118,47], hip:[114,88], knee:[118,117], ankle:[114,146], elbow:[142,60], hand:[162,64] },
+        { t: 0.62, phase: "2. 3초 천천히 앉기 ↓", push: false, head:[112,62], neck:[108,74], hip:[82,107], knee:[128,112], ankle:[114,146], elbow:[138,76], hand:[166,74] },
+        { t: 0.76, phase: "3. 바닥에서 0.5초 정지", push: true,  head:[112,63], neck:[108,75], hip:[81,108], knee:[129,112], ankle:[114,146], elbow:[138,77], hand:[166,75] },
+        { t: 1.00, phase: "4. 발바닥 밀며 일어서기 ↑", push: true, head:[118,28], neck:[118,41], sh:[118,47], hip:[114,88], knee:[118,117], ankle:[114,146], elbow:[142,60], hand:[162,64] }
+      ]
+    },
+    // 2. 점프 스쿼트
+    jumpsquat: {
+      cycleMs: 1900,
+      target: "하체 폭발력 · 심폐",
+      muscle: "legs",
+      arrows: "jump",
+      frames: [
+        { t: 0.00, phase: "1. 깊게 앉아 반동 준비", push: false, head:[112,62], neck:[108,74], hip:[82,107], knee:[128,112], ankle:[114,146], elbow:[100,88], hand:[86,100] },
+        { t: 0.36, phase: "2. 폭발적으로 점프! ↑", push: true,  head:[118,14], neck:[118,27], sh:[118,33], hip:[118,73], knee:[118,101], ankle:[118,128], elbow:[110,18], hand:[104,6] },
+        { t: 0.68, phase: "3. 무릎 굽혀 부드럽게 착지", push: false, head:[116,36], neck:[115,49], sh:[115,55], hip:[104,93], knee:[122,115], ankle:[114,146], elbow:[132,68], hand:[148,74] },
+        { t: 1.00, phase: "1. 깊게 앉아 반동 준비", push: false, head:[112,62], neck:[108,74], hip:[82,107], knee:[128,112], ankle:[114,146], elbow:[100,88], hand:[86,100] }
+      ]
+    },
+    // 3. 스탠다드 푸쉬업
+    pushup: {
+      cycleMs: 2600,
+      target: "가슴 · 삼두 · 코어",
+      muscle: "chest",
+      arrows: "pushup",
+      frames: [
+        { t: 0.00, phase: "1. 몸통 일직선 플랭크", push: false, head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,145], elbow:[164,120], hand:[162,146] },
+        { t: 0.50, phase: "2. 가슴이 바닥 가까이 ↓", push: false, head:[188,118], neck:[174,123], sh:[166,125], hip:[104,131], knee:[68,138], ankle:[34,146], elbow:[142,118], hand:[162,146] },
+        { t: 0.64, phase: "3. 바닥 밀어 올라오기 ↑", push: true,  head:[188,118], neck:[174,123], sh:[166,125], hip:[104,131], knee:[68,138], ankle:[34,146], elbow:[142,118], hand:[162,146] },
+        { t: 1.00, phase: "1. 몸통 일직선 플랭크", push: true,  head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,145], elbow:[164,120], hand:[162,146] }
+      ]
+    },
+    // 4. 파이크 푸쉬업 (어깨 집중)
+    pike: {
+      cycleMs: 2800,
+      target: "어깨 전면·측면 · 삼두",
+      muscle: "shoulder",
+      arrows: "pike",
+      frames: [
+        { t: 0.00, phase: "1. 엉덩이 높이 역V자(산 모양)", push: false, head:[152,92], neck:[140,80], sh:[142,86], hip:[98,42], knee:[68,94], ankle:[42,146], elbow:[154,116], hand:[166,146] },
+        { t: 0.52, phase: "2. 정수리를 손 사이로 ↓", push: false, head:[168,124], neck:[154,110], sh:[154,114], hip:[98,48], knee:[68,96], ankle:[42,146], elbow:[138,124], hand:[166,146] },
+        { t: 0.66, phase: "3. 어깨 힘으로 밀어 복귀 ↑", push: true,  head:[168,124], neck:[154,110], sh:[154,114], hip:[98,48], knee:[68,96], ankle:[42,146], elbow:[138,124], hand:[166,146] },
+        { t: 1.00, phase: "1. 엉덩이 높이 역V자(산 모양)", push: true,  head:[152,92], neck:[140,80], sh:[142,86], hip:[98,42], knee:[68,94], ankle:[42,146], elbow:[154,116], hand:[166,146] }
+      ]
+    },
+    // 5. 리버스 런지 / 불가리안 스플릿
+    lunge: {
+      cycleMs: 2800,
+      target: "앞허벅지 · 엉덩이 · 균형",
+      muscle: "legs",
+      arrows: "downup",
+      frames: [
+        { t: 0.00, phase: "1. 바르게 서서 중심 잡기", push: false, head:[120,26], neck:[120,39], sh:[120,45], hip:[120,86], knee:[124,116], ankle:[124,146], knee2:[114,116], ankle2:[112,146], elbow:[112,68], hand:[114,88] },
+        { t: 0.50, phase: "2. 앞·뒷무릎 90°로 수직 하강 ↓", push: false, head:[124,48], neck:[124,61], sh:[124,67], hip:[120,104], knee:[154,108], ankle:[158,146], knee2:[88,136], ankle2:[58,143], elbow:[108,86], hand:[126,96] },
+        { t: 0.66, phase: "3. 앞발 뒤꿈치로 밀어 상승 ↑", push: true,  head:[124,48], neck:[124,61], sh:[124,67], hip:[120,104], knee:[154,108], ankle:[158,146], knee2:[88,136], ankle2:[58,143], elbow:[108,86], hand:[126,96] },
+        { t: 1.00, phase: "1. 바르게 서서 중심 잡기", push: true,  head:[120,26], neck:[120,39], sh:[120,45], hip:[120,86], knee:[124,116], ankle:[124,146], knee2:[114,116], ankle2:[112,146], elbow:[112,68], hand:[114,88] }
+      ]
+    },
+    // 6. 맨몸 버피 (4단계 명확 분리)
+    burpee: {
+      cycleMs: 3400,
+      target: "전신 유산소 · 체지방 연소",
+      muscle: "full",
+      arrows: "burpee",
+      frames: [
+        { t: 0.00, phase: "1단계: 쪼그려 앉아 손 짚기", push: false, head:[134,82], neck:[126,94], sh:[126,98], hip:[92,118], knee:[126,120], ankle:[116,146], elbow:[142,122], hand:[154,146] },
+        { t: 0.28, phase: "2단계: 발 뒤로 뻗어 플랭크", push: false, head:[186,86], neck:[172,93], sh:[165,96], hip:[104,108], knee:[68,126], ankle:[34,146], elbow:[162,121], hand:[160,146] },
+        { t: 0.54, phase: "3단계: 양발 손 쪽으로 당기기", push: true,  head:[134,82], neck:[126,94], sh:[126,98], hip:[92,118], knee:[126,120], ankle:[116,146], elbow:[142,122], hand:[154,146] },
+        { t: 0.78, phase: "4단계: 만세하며 가볍게 점프! ↑", push: true,  head:[120,14], neck:[120,27], sh:[120,33], hip:[120,73], knee:[120,101], ankle:[120,128], elbow:[108,18], hand:[100,5] },
+        { t: 1.00, phase: "1단계: 쪼그려 앉아 손 짚기", push: false, head:[134,82], neck:[126,94], sh:[126,98], hip:[92,118], knee:[126,120], ankle:[116,146], elbow:[142,122], hand:[154,146] }
+      ]
+    },
+    // 7. 마운틴클라이머
+    climber: {
+      cycleMs: 1200,
+      target: "복부 코어 · 유산소 심박",
+      muscle: "core",
+      arrows: "climber",
+      frames: [
+        { t: 0.00, phase: "왼무릎 가슴으로 당기기 →", push: true,  head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[138,114], ankle:[114,138], knee2:[68,125], ankle2:[34,146], elbow:[164,120], hand:[162,146] },
+        { t: 0.50, phase: "오른무릎 빠르게 교대! →", push: true,  head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,146], knee2:[138,114], ankle2:[114,138], elbow:[164,120], hand:[162,146] },
+        { t: 1.00, phase: "왼무릎 가슴으로 당기기 →", push: true,  head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[138,114], ankle:[114,138], knee2:[68,125], ankle2:[34,146], elbow:[164,120], hand:[162,146] }
+      ]
+    },
+    // 8. 플랭크 숄더 탭 / 코어 홀드
+    planktap: {
+      cycleMs: 2200,
+      target: "복부 코어 · 어깨 안정화",
+      muscle: "core",
+      arrows: "none",
+      frames: [
+        { t: 0.00, phase: "1. 골반 수평 플랭크 유지", push: false, head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,146], elbow:[164,120], hand:[162,146] },
+        { t: 0.38, phase: "2. 반대 어깨 터치 (몸통 흔들림 X)", push: true,  head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,146], elbow:[178,108], hand:[168,93] },
+        { t: 0.70, phase: "1. 골반 수평 플랭크 유지", push: false, head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,146], elbow:[164,120], hand:[162,146] },
+        { t: 1.00, phase: "1. 골반 수평 플랭크 유지", push: false, head:[186,84], neck:[172,91], sh:[165,94], hip:[104,106], knee:[68,125], ankle:[34,146], elbow:[164,120], hand:[162,146] }
+      ]
+    },
+    // 9. 슈퍼맨 백 익스텐션
+    superman: {
+      cycleMs: 2800,
+      target: "등 전체 · 척추기립근 · 엉덩이",
+      muscle: "back",
+      arrows: "superman",
+      frames: [
+        { t: 0.00, phase: "1. 바닥에 엎드려 호흡 준비", push: false, head:[188,136], neck:[172,140], sh:[166,141], hip:[106,142], knee:[68,144], ankle:[32,145], elbow:[192,141], hand:[214,141] },
+        { t: 0.45, phase: "2. 가슴·팔·다리 동시에 들어 조이기 ↑", push: true,  head:[188,108], neck:[170,118], sh:[164,121], hip:[106,140], knee:[66,126], ankle:[28,106], elbow:[188,106], hand:[210,94] },
+        { t: 0.68, phase: "3. 등 근육 수축 1초 버티기", push: true,  head:[188,108], neck:[170,118], sh:[164,121], hip:[106,140], knee:[66,126], ankle:[28,106], elbow:[188,106], hand:[210,94] },
+        { t: 1.00, phase: "1. 바닥에 엎드려 호흡 준비", push: false, head:[188,136], neck:[172,140], sh:[166,141], hip:[106,142], knee:[68,144], ankle:[32,145], elbow:[192,141], hand:[214,141] }
+      ]
+    },
+    // 10. 바이시클 크런치
+    bicycle: {
+      cycleMs: 1600,
+      target: "복직근 · 옆구리(외복사근)",
+      muscle: "core",
+      arrows: "none",
+      frames: [
+        { t: 0.00, phase: "오른팔꿈치 ↔ 왼무릎 교차!", push: true,  head:[170,104], neck:[156,118], sh:[152,121], hip:[108,140], knee:[134,106], ankle:[112,102], knee2:[68,128], ankle2:[32,120], elbow:[144,102], hand:[168,94] },
+        { t: 0.50, phase: "왼팔꿈치 ↔ 오른무릎 교차!", push: true,  head:[170,104], neck:[156,118], sh:[152,121], hip:[108,140], knee:[68,128], ankle:[32,120], knee2:[134,106], ankle2:[112,102], elbow:[144,102], hand:[168,94] },
+        { t: 1.00, phase: "오른팔꿈치 ↔ 왼무릎 교차!", push: true,  head:[170,104], neck:[156,118], sh:[152,121], hip:[108,140], knee:[134,106], ankle:[112,102], knee2:[68,128], ankle2:[32,120], elbow:[144,102], hand:[168,94] }
+      ]
+    },
+    // 11. 웜업/쿨다운 점핑잭 & 스트레칭
+    stretch: {
+      cycleMs: 1800,
+      target: "전신 관절 이완 · 체온 상승",
+      muscle: "full",
+      arrows: "none",
+      frames: [
+        { t: 0.00, phase: "1. 차렷 자세에서 호흡", push: false, head:[120,26], neck:[120,39], sh:[120,45], hip:[120,88], knee:[120,117], ankle:[116,146], knee2:[120,117], ankle2:[124,146], elbow:[106,68], hand:[102,92] },
+        { t: 0.50, phase: "2. 팔·다리 크게 벌려 전신 순환", push: true,  head:[120,22], neck:[120,35], sh:[120,41], hip:[120,84], knee:[102,115], ankle:[90,146], knee2:[138,115], ankle2:[150,146], elbow:[88,24], hand:[104,8] },
+        { t: 1.00, phase: "1. 차렷 자세에서 호흡", push: false, head:[120,26], neck:[120,39], sh:[120,45], hip:[120,88], knee:[120,117], ankle:[116,146], knee2:[120,117], ankle2:[124,146], elbow:[106,68], hand:[102,92] }
+      ]
+    }
+  };
+
+  function lerp(a, b, r) { return a + (b - a) * r; }
+  function lerpPt(p1, p2, r) { return [lerp(p1[0], p2[0], r), lerp(p1[1], p2[1], r)]; }
+
+  function interpolatePose(poseDef, progress) {
+    const fr = poseDef.frames;
+    let i = 0;
+    while (i < fr.length - 2 && progress > fr[i + 1].t) i++;
+    const f1 = fr[i], f2 = fr[i + 1];
+    const span = Math.max(0.0001, f2.t - f1.t);
+    const local = Math.max(0, Math.min(1, (progress - f1.t) / span));
+    const ease = 0.5 - 0.5 * Math.cos(Math.PI * local);
+    const out = { phase: f1.phase, push: f1.push };
+    for (const k of Object.keys(f1)) {
+      if (k === "t" || k === "phase" || k === "push") continue;
+      out[k] = lerpPt(f1[k], f2[k], ease);
+    }
+    return out;
+  }
+
+  // 두 점 사이에 굵은 캡슐형(둥근 모서리) 신체 부위 SVG 생성
+  function limbPath(p1, p2, width, color, opacity = 1) {
+    return `<line x1="${p1[0].toFixed(1)}" y1="${p1[1].toFixed(1)}" x2="${p2[0].toFixed(1)}" y2="${p2[1].toFixed(1)}"
+      stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-opacity="${opacity}"/>`;
+  }
+
+  // 운동 방향 가이드 화살표
+  function directionArrows(kind, push) {
+    if (kind === "downup") {
+      return push
+        ? `<path d="M34 108 V62 M26 72 L34 60 L42 72" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        : `<path d="M34 62 V108 M26 98 L34 110 L42 98" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    if (kind === "jump") {
+      return push
+        ? `<path d="M34 115 V45 M25 57 L34 43 L43 57" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`
+        : `<path d="M34 68 V112 M26 102 L34 114 L42 102" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    if (kind === "pushup" || kind === "pike") {
+      return push
+        ? `<path d="M212 126 V84 M204 94 L212 82 L220 94" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        : `<path d="M212 84 V126 M204 116 L212 128 L220 116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    if (kind === "superman") {
+      return `<path d="M28 128 V96 M21 105 L28 94 L35 105 M218 128 V92 M211 101 L218 90 L225 101" stroke="#fbbf24" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    if (kind === "climber") {
+      return `<path d="M90 134 H136 M126 127 L138 134 L126 141" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    return "";
+  }
+
+  let currentPoseKind = "stretch";
+  let slowMotion = false;
+  let animRaf = null;
+  let virtualTime = 0;
+  let lastRafTs = null;
+
+  function toggleSlowMotion() {
+    slowMotion = !slowMotion;
+    const btn = document.getElementById("slowBtn");
+    btn.classList.toggle("active", slowMotion);
+    btn.textContent = slowMotion ? "🐢 슬로우 ON" : "🐢 0.5x 슬로우";
+  }
+
+  // 캔버스에 한 번 생성한 화면을 직접 그려 프레임마다 DOM을 교체하지 않습니다.
+  // 기존 방식은 매 프레임 stage.innerHTML 전체를 다시 만들면서 모바일 브라우저에서
+  // 깜박임/사라짐이 발생할 수 있었습니다.
+  let poseCanvas = null;
+  let poseCtx = null;
+  let lastPhase = "";
+  let lastHudUpdate = 0;
+
+  function ensurePoseCanvas() {
+    const stage = document.getElementById("poseStage");
+    if (!stage) return false;
+    if (!poseCanvas || !stage.contains(poseCanvas)) {
+      stage.innerHTML = `
+        <div class="stage-hud-top">
+          <span class="phase-banner" id="posePhase">동작 준비</span>
+          <span class="rep-badge" id="poseSpeed">실시간 시범</span>
+        </div>
+        <canvas id="poseCanvas" role="img" aria-label="운동 동작 애니메이션"></canvas>
+        <div class="stage-hud-bottom">
+          <span class="legend-dot"><i></i>붉은 부위 = 주로 사용하는 근육</span>
+          <span id="poseHint">리듬에 맞춰 따라하기</span>
+        </div>`;
+      poseCanvas = document.getElementById("poseCanvas");
+      poseCtx = poseCanvas.getContext("2d", { alpha: true });
+      lastPhase = "";
+    }
+    return !!poseCtx;
+  }
+
+  function drawPoseCanvas(p, def, ts) {
+    if (!ensurePoseCanvas()) return;
+    const stage = document.getElementById("poseStage");
+    const w = Math.max(1, stage.clientWidth);
+    const h = Math.max(1, stage.clientHeight);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+    if (poseCanvas.width !== cw || poseCanvas.height !== ch) {
+      poseCanvas.width = cw; poseCanvas.height = ch;
+      poseCanvas.style.width = w + "px"; poseCanvas.style.height = h + "px";
+    }
+    const c = poseCtx;
+    c.setTransform(dpr * w / 240, 0, 0, dpr * h / 165, 0, 0);
+    c.clearRect(0, 0, 240, 165);
+    c.lineCap = "round"; c.lineJoin = "round";
+
+    if (currentPoseKind === "rest") {
+      const inhale = Math.sin(virtualTime / 550) > 0;
+      const r = 26 + 8 * Math.sin(virtualTime / 550);
+      c.fillStyle = "rgba(56,189,248,.14)"; c.strokeStyle = "#38bdf8"; c.lineWidth = 2.5;
+      c.beginPath(); c.arc(120, 86, r, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.strokeStyle = "#7dd3fc"; c.beginPath(); c.arc(120, 86, 18, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = "#fbbf24"; c.lineWidth = 3; c.beginPath(); c.moveTo(120,74); c.lineTo(120,86); c.lineTo(129,92); c.stroke();
+      p.phase = inhale ? "코로 깊게 들이마시기" : "입으로 길게 내쉬기";
+      return;
+    }
+
+    const m = def.muscle;
+    const hot = "#f43f5e", base = "#cbd5e1", back = "#64748b";
+    const line = (a,b,width,color,alpha=1) => {
+      if (!a || !b) return;
+      c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = width;
+      c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke(); c.globalAlpha = 1;
+    };
+    c.fillStyle = "#334155"; c.fillRect(18,147,204,4);
+    c.strokeStyle = "#64748b"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(18,147); c.lineTo(222,147); c.stroke();
+    if (p.knee2) { line(p.hip,p.knee2,11,back,.8); line(p.knee2,p.ankle2,9,back,.8); }
+    const leg = m === "legs" || m === "full";
+    const core = m === "core" || m === "back" || m === "full";
+    const chest = m === "chest" || m === "shoulder" || m === "full";
+    line(p.hip,p.knee,13,leg?hot:base);
+    line(p.knee,p.ankle,10,leg?"#fb7185":base);
+    line(p.neck,p.hip,17,core?hot:base);
+    const shoulder = p.sh || p.neck;
+    line(shoulder,lerpPt(shoulder,p.hip,.48),18,chest?hot:base,.92);
+    line(shoulder,p.elbow,9.5,chest?"#fb7185":"#e2e8f0");
+    line(p.elbow,p.hand,8,chest?"#fb7185":"#e2e8f0");
+    if (p.ankle) { c.fillStyle="#f8fafc"; c.beginPath(); c.ellipse(p.ankle[0]+4,p.ankle[1],7,3.2,0,0,Math.PI*2); c.fill(); }
+    c.fillStyle="#fbbf24"; c.beginPath(); c.arc(p.hand[0],p.hand[1],4.2,0,Math.PI*2); c.fill();
+    c.fillStyle="#f8fafc"; c.strokeStyle="#0f172a"; c.lineWidth=2;
+    c.beginPath(); c.arc(p.head[0],p.head[1],10.5,0,Math.PI*2); c.fill(); c.stroke();
+    // 동작 방향을 화면 우측의 고정 화살표로 표시
+    const ax = 212; c.strokeStyle = p.push ? "#fbbf24" : "#38bdf8"; c.lineWidth=3;
+    c.beginPath(); c.moveTo(ax, p.push?108:62); c.lineTo(ax,p.push?62:108); c.stroke();
+    c.beginPath();
+    if (p.push) { c.moveTo(ax-8,72); c.lineTo(ax,60); c.lineTo(ax+8,72); }
+    else { c.moveTo(ax-8,98); c.lineTo(ax,110); c.lineTo(ax+8,98); }
+    c.stroke();
+  }
+
+  function renderAnimatedFrame(ts) {
+    if (lastRafTs === null) lastRafTs = ts;
+    const dt = Math.min(50, Math.max(0, ts - lastRafTs));
+    lastRafTs = ts;
+    if (document.hidden) { animRaf = null; return; }
+    virtualTime += dt * (slowMotion ? 0.45 : 1.0);
+    const def = POSES[currentPoseKind] || POSES.stretch;
+    const prog = currentPoseKind === "rest" ? 0 : (virtualTime % def.cycleMs) / def.cycleMs;
+    const p = currentPoseKind === "rest" ? {phase:""} : interpolatePose(def, prog);
+    drawPoseCanvas(p, def, ts);
+    if (p.phase !== lastPhase || ts - lastHudUpdate > 1000) {
+      const phase = document.getElementById("posePhase");
+      const speed = document.getElementById("poseSpeed");
+      const hint = document.getElementById("poseHint");
+      if (phase) { phase.textContent = p.phase || "회복 구간"; phase.classList.toggle("push", !!p.push); }
+      if (speed) speed.textContent = slowMotion ? "0.5x 슬로우" : "실시간 시범";
+      if (hint) hint.textContent = slowMotion ? "자세 확인 모드" : "리듬에 맞춰 따라하기";
+      lastPhase = p.phase; lastHudUpdate = ts;
+    }
+    animRaf = requestAnimationFrame(renderAnimatedFrame);
+  }
+
+  function startPoseAnimation() {
+    if (animRaf === null && !document.hidden) {
+      lastRafTs = null;
+      animRaf = requestAnimationFrame(renderAnimatedFrame);
+    }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      if (animRaf !== null) cancelAnimationFrame(animRaf);
+      animRaf = null; lastRafTs = null;
+    } else startPoseAnimation();
+  });
+  window.addEventListener("resize", () => { if (poseCanvas) poseCanvas.width = 0; });
+
+  // =========================================================================
+  // 2. 주 3회(월/수/금) 60분 100% 맨몸 프로토콜
+  // =========================================================================
+  const plans = [
+    {
+      label: "DAY 1 (월) · 하체/푸시 맨몸 + HIIT",
+      steps: [
+        {
+          block: "WARM-UP", type: "strength", pose: "stretch", met: 5.0,
+          name: "맨몸 동적 웜업 &amp; 관절 풀기", spec: "5분 · 팔벌려뛰기·레그스윙·힙힌지", sec: 300,
+          steps: ["발목·무릎·고관절을 원을 그리며 부드럽게 풀어줍니다.", "제자리 팔벌려뛰기와 다리 앞뒤 스윙으로 체온을 올립니다.", "허리를 곧게 펴고 엉덩이를 뒤로 빼며 힙힌지 동작을 반복합니다."],
+          cue: "통증이 없는 범위에서 가동범위를 천천히 넓히세요."
+        },
+        {
+          block: "STRENGTH 1/3", type: "strength", pose: "squat", met: 6.0,
+          name: "맨몸 템포 스쿼트 (3초 하강)", spec: "4세트 × 15회 (세트당 90초 수행+휴식)", sec: 360,
+          steps: ["발을 어깨너비보다 살짝 넓게 두고 발끝을 약간 바깥쪽으로 둡니다.", "3초 동안 엉덩이와 무릎을 함께 접으며 깊게 내려갑니다.", "발바닥 전체로 바닥을 밀어 올리며 일어서되 무릎을 과하게 펴 잠그지 않습니다."],
+          cue: "무게가 없으므로 내려가는 3초 동안 대퇴사두근과 둔근 긴장을 유지하세요."
+        },
+        {
+          block: "STRENGTH 2/3", type: "strength", pose: "pushup", met: 6.5,
+          name: "스탠다드 푸쉬업", spec: "4세트 × 12~15회 (힘들면 무릎 대고 진행)", sec: 240,
+          steps: ["어깨 바로 아래에 손목을 두고 머리부터 발뒤꿈치까지 일직선을 만듭니다.", "팔꿈치를 몸통과 약 45도 각도로 유지하며 가슴이 바닥 가까이 갈 때까지 내립니다.", "복부와 엉덩이에 힘을 준 채 밀어 올려 시작 자세로 돌아옵니다."],
+          cue: "허리가 처지거나 엉덩이가 들리지 않게 코어를 단단히 고정하세요."
+        },
+        {
+          block: "STRENGTH 3/3", type: "strength", pose: "lunge", met: 6.0,
+          name: "맨몸 리버스 런지 교대", spec: "3세트 × 좌우 각 10회 (총 20회)", sec: 240,
+          steps: ["양발을 골반너비로 서고 한쪽 발을 뒤로 크게 내딛습니다.", "앞발 뒤꿈치에 체중을 실으며 앞·뒷무릎이 약 90도가 되도록 내립니다.", "앞발로 바닥을 밀어 제자리로 돌아온 뒤 반대쪽 발로 이어갑니다."],
+          cue: "상체가 앞으로 과하게 숙여지지 않도록 복부에 힘을 주세요."
+        },
+        {
+          block: "HIIT R1 · WORK", type: "hiit", pose: "burpee", met: 9.5,
+          name: "HIIT 1라운드: 맨몸 버피", spec: "40초 전력 수행", sec: 40,
+          steps: ["선 상태에서 스쿼트 자세로 앉으며 양손을 바닥에 짚습니다.", "발을 뒤로 뻗어 플랭크 자세를 만든 뒤 다시 발을 당겨옵니다.", "발끝으로 뛰어오르며 전신 심박수를 끌어올립니다."],
+          cue: "착지 시 소리가 크지 않게 무릎과 발목으로 충격을 흡수하세요."
+        },
+        {
+          block: "HIIT R1 · REST", type: "rest", pose: "rest", met: 2.5,
+          name: "인터벌 휴식", spec: "20초 호흡 정리", sec: 20,
+          steps: ["제자리를 가볍게 걸으며 숨을 고릅니다.", "코로 들이쉬고 입으로 길게 내쉬며 심박수를 안정시킵니다."],
+          cue: "갑자기 바닥에 주저앉지 말고 서서 호흡을 정리하세요."
+        },
+        {
+          block: "HIIT R2 · WORK", type: "hiit", pose: "jumpsquat", met: 9.0,
+          name: "HIIT 2라운드: 점프 스쿼트", spec: "40초 전력 수행", sec: 40,
+          steps: ["스쿼트 자세로 내려갔다가 폭발적으로 뛰어오릅니다.", "착지하자마자 엉덩이를 뒤로 빼며 다음 스쿼트로 연결합니다."],
+          cue: "점프 높이를 욕심내기보다 착지 균형과 호흡 리듬을 지키세요."
+        },
+        {
+          block: "HIIT R2 · REST", type: "rest", pose: "rest", met: 2.5,
+          name: "인터벌 휴식", spec: "20초 호흡 정리", sec: 20,
+          steps: ["어깨와 목의 힘을 빼고 호흡을 정리합니다.", "다음 마운틴클라이머 자세를 준비합니다."],
+          cue: "짧은 20초 동안 호흡 리듬을 되찾는 데 집중하세요."
+        },
+        {
+          block: "HIIT R3 · WORK", type: "hiit", pose: "climber", met: 8.5,
+          name: "HIIT 3라운드: 마운틴클라이머", spec: "40초 빠른 교대", sec: 40,
+          steps: ["플랭크 자세에서 손목·어깨·발끝을 정렬합니다.", "한쪽 무릎을 가슴 쪽으로 빠르게 당겼다 원위치하며 교대합니다."],
+          cue: "엉덩이가 높이 솟지 않게 낮고 평평한 플랭크 라인을 유지하세요."
+        },
+        {
+          block: "HIIT R3 · REST", type: "rest", pose: "rest", met: 2.0,
+          name: "라운드 휴식", spec: "60초 회복", sec: 60,
+          steps: ["물을 한 모금 마시고 호흡을 고릅니다.", "남은 2개 HIIT 라운드를 위한 에너지를 모읍니다."],
+          cue: "과호흡이 오지 않도록 천천히 숨을 들이쉬고 내쉬세요."
+        },
+        {
+          block: "HIIT R4 · WORK", type: "hiit", pose: "burpee", met: 9.5,
+          name: "HIIT 4라운드: 맨몸 버피", spec: "40초 전력 수행", sec: 40,
+          steps: ["스쿼트 → 플랭크 → 복귀 → 점프 흐름을 끊김 없이 이어갑니다.", "피로가 쌓여도 상체 지지력을 유지하며 페이스를 지키세요."],
+          cue: "속도가 떨어져도 동작을 대충 줄이지 말고 끝까지 이어가세요."
+        },
+        {
+          block: "HIIT R4 · REST", type: "rest", pose: "rest", met: 2.5,
+          name: "인터벌 휴식", spec: "20초 호흡 정리", sec: 20,
+          steps: ["마지막 점프 스쿼트 라운드를 준비합니다.", "가볍게 걷거나 제자리 스텝으로 몸을 움직입니다."],
+          cue: "마지막 라운드 직전, 호흡을 한 번 크게 가다듬으세요."
+        },
+        {
+          block: "HIIT R5 · WORK", type: "hiit", pose: "jumpsquat", met: 9.0,
+          name: "HIIT 5라운드: 점프 스쿼트", spec: "40초 마지막 스퍼트", sec: 40,
+          steps: ["하체 피로가 있어도 깊이와 착지 안정성을 유지하며 점프합니다.", "종료 알림이 울릴 때까지 집중력을 놓지 않습니다."],
+          cue: "오늘 HIIT의 마지막 구간입니다. 끝까지 밀어붙이세요."
+        },
+        {
+          block: "COOL-DOWN", type: "strength", pose: "stretch", met: 2.5,
+          name: "쿨다운 &amp; 하체 스트레칭", spec: "5분 · 허벅지·종아리·고관절 이완", sec: 300,
+          steps: ["허벅지 앞쪽(대퇴사두근)과 뒤쪽(햄스트링)을 각각 20~30초씩 늘립니다.", "종아리와 고관절 앞쪽을 스트레칭하며 호흡을 천천히 낮춥니다."],
+          cue: "반동을 주지 말고 숨을 내쉬며 근육 긴장을 풀어주세요."
+        }
+      ]
+    },
+    {
+      label: "DAY 2 (수) · 등/어깨 맨몸 + 서킷",
+      steps: [
+        {
+          block: "WARM-UP", type: "strength", pose: "stretch", met: 5.0,
+          name: "맨몸 웜업 &amp; 어깨·등 가동", spec: "5분 · 팔돌리기·고양이소자세·슈퍼맨", sec: 300,
+          steps: ["양팔을 크게 돌리며 견갑대와 어깨 관절을 풀어줍니다.", "네발기기 자세에서 등을 둥글게 말았다 펴는 동작을 반복합니다.", "엎드려 가슴과 팔을 살짝 들어 올리는 가벼운 등 활성화를 진행합니다."],
+          cue: "어깨가 으쓱 올라가지 않게 날개뼈 움직임에 집중하세요."
+        },
+        {
+          block: "STRENGTH 1/3", type: "strength", pose: "pike", met: 6.5,
+          name: "파이크 푸쉬업 (어깨 전면·측면 집중)", spec: "4세트 × 10~12회", sec: 240,
+          steps: ["플랭크에서 엉덩이를 높이 들어 역V자(산 모양) 자세를 만듭니다.", "정수리가 손 사이 바닥 쪽으로 향하도록 팔꿈치를 굽혀 내립니다.", "어깨 힘으로 바닥을 밀어 역V자 자세로 돌아옵니다."],
+          cue: "목에 과도한 압력이 가지 않도록 시선은 발끝이나 무릎 쪽을 보세요."
+        },
+        {
+          block: "STRENGTH 2/3", type: "strength", pose: "superman", met: 5.5,
+          name: "슈퍼맨 백 익스텐션 &amp; 리버스 스노우엔젤", spec: "4세트 × 15회", sec: 240,
+          steps: ["배를 대고 엎드린 상태에서 시선은 바닥을 향하게 둡니다.", "가슴·허벅지·양팔을 살짝 들어 올린 뒤 양팔을 뒤로 당기며 등 근육을 조입니다.", "천천히 내려놓으며 반복합니다."],
+          cue: "허리를 과하게 꺾기보다 등 상부·중앙(승모근·기립근) 수축을 느끼세요."
+        },
+        {
+          block: "STRENGTH 3/3", type: "strength", pose: "planktap", met: 5.5,
+          name: "플랭크 숄더 탭 (코어·어깨 안정화)", spec: "3세트 × 좌우 각 10회 (총 20회)", sec: 180,
+          steps: ["발을 어깨너비보다 조금 넓게 벌려 하이플랭크 자세를 잡습니다.", "골반이 흔들리지 않도록 복부에 힘을 준 채 한 손으로 반대쪽 어깨를 터치합니다.", "내려놓고 반대쪽 손으로 이어갑니다."],
+          cue: "골반이 좌우로 회전하지 않게 엉덩이와 복부를 단단히 잠그세요."
+        },
+        {
+          block: "CIRCUIT 1A · WORK", type: "hiit", pose: "lunge", met: 8.0,
+          name: "서킷 1A: 점핑 런지 또는 스피드 런지", spec: "45초 수행", sec: 45,
+          steps: ["런지 자세에서 뒤로 내딛거나 가볍게 스텝을 밟으며 하체 지구력을 끌어올립니다.", "무릎과 발목 정렬을 유지하며 일정한 속도로 진행합니다."],
+          cue: "무릎이 바닥에 세게 부딪히지 않도록 컨트롤하며 움직이세요."
+        },
+        {
+          block: "CIRCUIT REST", type: "rest", pose: "rest", met: 2.5,
+          name: "짧은 전환", spec: "15초 휴식", sec: 15,
+          steps: ["호흡을 한두 번 고르고 다음 서킷 동작을 준비합니다."],
+          cue: "빠르게 전환하되 숨이 턱 끝까지 차면 호흡부터 정리하세요."
+        },
+        {
+          block: "CIRCUIT 1B · WORK", type: "hiit", pose: "pushup", met: 8.0,
+          name: "서킷 1B: 핸드 릴리즈 푸쉬업", spec: "45초 수행", sec: 45,
+          steps: ["가슴이 바닥에 닿을 때까지 내려간 뒤 양손을 바닥에서 1~2초 살짝 뗍니다.", "다시 손바닥을 짚고 몸통 전체를 한 번에 밀어 올립니다."],
+          cue: "허리만 먼저 들리지 않게 가슴과 골반이 동시에 올라오게 하세요."
+        },
+        {
+          block: "CIRCUIT REST", type: "rest", pose: "rest", met: 2.5,
+          name: "짧은 전환", spec: "15초 휴식", sec: 15,
+          steps: ["손목과 어깨를 가볍게 털어주고 다음 동작을 준비합니다."],
+          cue: "다음 동작은 복부와 코어 회전 중심입니다."
+        },
+        {
+          block: "CIRCUIT 1C · WORK", type: "hiit", pose: "bicycle", met: 7.5,
+          name: "서킷 1C: 바이시클 크런치", spec: "45초 수행", sec: 45,
+          steps: ["등을 대고 누워 양손을 머리 옆에 가볍게 둡니다.", "한쪽 무릎을 당기며 반대쪽 팔꿈치를 가까이 가져가고 다리를 교대하며 뻗습니다."],
+          cue: "목을 손으로 잡아당기지 말고 복부 힘으로 상체를 살짝 들어 올리세요."
+        },
+        {
+          block: "CIRCUIT REST", type: "rest", pose: "rest", met: 2.0,
+          name: "세트 휴식", spec: "60초 휴식", sec: 60,
+          steps: ["수분을 섭취하고 2바퀴째 서킷을 준비합니다.", "호흡이 안정될 때까지 천천히 걸으며 회복합니다."],
+          cue: "2바퀴째도 같은 템포로 완주하는 것을 목표로 두세요."
+        },
+        {
+          block: "CIRCUIT 2A · WORK", type: "hiit", pose: "lunge", met: 8.0,
+          name: "서킷 2A: 런지 서킷 (2회전)", spec: "45초 수행", sec: 45,
+          steps: ["2바퀴째 런지 동작을 이어갑니다.", "하체 피로가 올라올수록 보폭과 균형을 정확히 잡으세요."],
+          cue: "자세가 무너지면 리버스 런지로 전환해 안전하게 이어가세요."
+        },
+        {
+          block: "CIRCUIT REST", type: "rest", pose: "rest", met: 2.5,
+          name: "짧은 전환", spec: "15초 휴식", sec: 15,
+          steps: ["다음 푸쉬업 동작을 위해 손 위치를 잡습니다."],
+          cue: "짧은 휴식 동안 호흡을 깊게 가져가세요."
+        },
+        {
+          block: "CIRCUIT 2B · WORK", type: "hiit", pose: "pushup", met: 8.0,
+          name: "서킷 2B: 푸쉬업 서킷 (2회전)", spec: "45초 수행", sec: 45,
+          steps: ["가슴과 삼두근·어깨를 끝까지 자극하며 반복합니다.", "개수보다 정확한 가동범위 유지가 중요합니다."],
+          cue: "힘들면 무릎 푸쉬업으로 전환해 시간을 채우세요."
+        },
+        {
+          block: "CIRCUIT REST", type: "rest", pose: "rest", met: 2.5,
+          name: "짧은 전환", spec: "15초 휴식", sec: 15,
+          steps: ["매트 위에 누워 마지막 코어 구간을 준비합니다."],
+          cue: "마지막 동작까지 집중력을 유지하세요."
+        },
+        {
+          block: "CIRCUIT 2C · WORK", type: "hiit", pose: "bicycle", met: 7.5,
+          name: "서킷 2C: 바이시클 크런치 (2회전)", spec: "45초 수행", sec: 45,
+          steps: ["복직근과 복사근을 끝까지 조이며 서킷을 마무리합니다.", "호흡을 참지 말고 동작에 맞춰 내쉬세요."],
+          cue: "서킷의 마지막 동작입니다. 깔끔하게 마무리하세요."
+        },
+        {
+          block: "COOL-DOWN", type: "strength", pose: "stretch", met: 2.5,
+          name: "쿨다운 &amp; 상체·등 스트레칭", spec: "5분 · 어깨·가슴·허리 이완", sec: 300,
+          steps: ["차일드 포즈(아기 자세)로 등 하부와 어깨를 늘려줍니다.", "가슴 열기 스트레칭과 목 좌우 기울이기로 긴장을 풉니다."],
+          cue: "오늘 운동으로 긴장된 상체 근육을 충분히 늘려주세요."
+        }
+      ]
+    },
+    {
+      label: "DAY 3 (금) · 전신 맨몸 + 피니셔",
+      steps: [
+        {
+          block: "WARM-UP", type: "strength", pose: "stretch", met: 5.0,
+          name: "전신 웜업 &amp; 리듬 조깅", spec: "5분 · 제자리 조깅·팔벌려뛰기·스쿼트", sec: 300,
+          steps: ["가벼운 제자리 조깅으로 심박수를 천천히 올립니다.", "팔벌려뛰기와 맨몸 스쿼트로 전신 근육을 예열합니다."],
+          cue: "주말 전 마지막 세션, 몸 전체를 고르게 깨워줍니다."
+        },
+        {
+          block: "STRENGTH 1/3", type: "strength", pose: "lunge", met: 6.5,
+          name: "불가리안 스플릿 스쿼트 (의자·소파 활용)", spec: "3세트 × 좌우 각 10회", sec: 240,
+          steps: ["발등을 뒤쪽 의자나 낮은 지지대에 올리고 앞발을 충분히 앞에 둡니다.", "앞발 중심을 유지하며 뒷무릎이 바닥 쪽으로 향하게 내립니다.", "앞발 뒤꿈치로 밀어 올라오며 한쪽 다리씩 집중 단련합니다."],
+          cue: "상체를 약간 앞으로 기울이면 둔근 자극이 더 커집니다."
+        },
+        {
+          block: "STRENGTH 2/3", type: "strength", pose: "pushup", met: 6.5,
+          name: "디클라인 푸쉬업 또는 다이아몬드 푸쉬업", spec: "3세트 × 10~15회", sec: 180,
+          steps: ["발을 살짝 높인 디클라인 푸쉬업이나 손바닥을 좁힌 푸쉬업을 선택합니다.", "코어를 단단히 잠그고 가슴/삼두근 힘으로 밀어 올립니다."],
+          cue: "어깨 관절에 무리가 가지 않는 각도로 수행하세요."
+        },
+        {
+          block: "STRENGTH 3/3", type: "strength", pose: "planktap", met: 5.0,
+          name: "할로우 바디 홀드 또는 포어암 플랭크", spec: "3세트 × 40초 버티기", sec: 180,
+          steps: ["팔뚝을 바닥에 대고 팔꿈치 아래 어깨를 두거나 할로우 자세를 잡습니다.", "허리가 꺾이지 않도록 갈비뼈를 안으로 당기고 복부에 힘을 줍니다."],
+          cue: "숨을 참지 말고 얕고 고르게 호흡하며 버티세요."
+        },
+        {
+          block: "FINISHER R1 · WORK", type: "hiit", pose: "burpee", met: 8.5,
+          name: "피니셔 1R: 스쿼트 쓰러스트(노점프 버피)", spec: "45초 수행", sec: 45,
+          steps: ["스쿼트 후 손을 짚고 발을 뒤로 뻗어 플랭크를 만든 뒤 다시 일어납니다.", "점프를 생략해 관절 부담을 줄이면서 전신 유산소 강도를 유지합니다."],
+          cue: "속도와 자세의 균형을 맞추며 전신을 움직이세요."
+        },
+        {
+          block: "FINISHER REST", type: "rest", pose: "rest", met: 2.5,
+          name: "전환 휴식", spec: "15초 휴식", sec: 15,
+          steps: ["호흡을 고르며 다음 피니셔 동작을 준비합니다."],
+          cue: "호흡을 길게 내쉬며 심박수를 조절하세요."
+        },
+        {
+          block: "FINISHER R2 · WORK", type: "hiit", pose: "lunge", met: 8.0,
+          name: "피니셔 2R: 사이드 런지 교대", spec: "45초 수행", sec: 45,
+          steps: ["발을 옆으로 넓게 내딛으며 한쪽 고관절을 접고 반대쪽 다리는 뻗습니다.", "엉덩이를 뒤로 빼며 중심을 잡았다가 중앙으로 돌아옵니다."],
+          cue: "무릎이 발끝보다 안쪽으로 무너지지 않게 주의하세요."
+        },
+        {
+          block: "FINISHER REST", type: "rest", pose: "rest", met: 2.5,
+          name: "전환 휴식", spec: "15초 휴식", sec: 15,
+          steps: ["가볍게 호흡을 정리하고 다음 구간을 준비합니다."],
+          cue: "다음은 전신 코어·버티기 구간입니다."
+        },
+        {
+          block: "FINISHER R3 · WORK", type: "hiit", pose: "climber", met: 8.5,
+          name: "피니셔 3R: 스파이더맨 플랭크", spec: "45초 수행", sec: 45,
+          steps: ["플랭크 자세에서 한쪽 무릎을 같은 쪽 팔꿈치 바깥쪽으로 당깁니다.", "복부 옆면(외복사근) 수축을 느끼며 좌우 번갈아 진행합니다."],
+          cue: "상체가 과하게 흔들리지 않게 코어 중심을 잡으세요."
+        },
+        {
+          block: "FINISHER REST", type: "rest", pose: "rest", met: 2.0,
+          name: "라운드 휴식", spec: "60초 휴식", sec: 60,
+          steps: ["물을 마시고 호흡을 고른 뒤 마지막 라운드를 준비합니다."],
+          cue: "일주일 운동의 마지막 라운드가 남았습니다."
+        },
+        {
+          block: "FINISHER R4 · WORK", type: "hiit", pose: "burpee", met: 9.5,
+          name: "피니셔 4R: 전신 콤보 스퍼트", spec: "45초 마지막 스퍼트", sec: 45,
+          steps: ["버피·점프스쿼트·마운틴클라이머 중 오늘 가장 잘 맞는 동작으로 마무리합니다.", "끝까지 호흡과 자세를 놓지 않고 완주합니다."],
+          cue: "주 3회 루틴의 마지막 구간입니다. 끝까지 해내세요!"
+        },
+        {
+          block: "COOL-DOWN", type: "strength", pose: "stretch", met: 2.5,
+          name: "쿨다운 &amp; 전신 스트레칭", spec: "5분 · 전신 이완 및 호흡 안정", sec: 300,
+          steps: ["전신을 천천히 늘리며 스트레칭하고 심호흡으로 마무리합니다.", "오늘 운동 기록을 점검하고 충분한 수분과 단백질 식사를 챙기세요."],
+          cue: "이번 주 3회 운동을 완주한 몸을 충분히 회복시켜 주세요."
+        }
+      ]
+    }
+  ];
+
+  // =========================================================================
+  // 3. 상태 관리 + 로컬 스토리지 자동 복원 & 누적 기록
+  // =========================================================================
+  const STORE_KEY = "bw_trainer_state_v3";
+  const WEIGHT_KG = 79;
+
+  let dayIdx = 0;
+  let stepIdx = 0;
+  let remaining = 0;
+  let burnedKcal = 0;
+  let completedCount = 0;
+  let completedDays = [false, false, false];
+
+  let running = false;
+  let timer = null;
+  let ttsOn = true;
+  let metroOn = false;
+  let metroTimer = null;
+  let audioCtx = null;
+  let guideOpen = true;
+
+  let rec = null;
+  let voiceOn = false;
+  let lastVoiceTs = 0;
+
+  const $ = id => document.getElementById(id);
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        dayIdx, stepIdx, remaining, burnedKcal, completedCount, completedDays
+      }));
+    } catch (e) {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (typeof d.dayIdx === "number" && plans[d.dayIdx]) dayIdx = d.dayIdx;
+      const steps = plans[dayIdx].steps;
+      if (typeof d.stepIdx === "number" && steps[d.stepIdx]) stepIdx = d.stepIdx;
+      if (typeof d.remaining === "number" && d.remaining > 0) remaining = d.remaining;
+      else remaining = steps[stepIdx].sec;
+      if (typeof d.burnedKcal === "number") burnedKcal = d.burnedKcal;
+      if (typeof d.completedCount === "number") completedCount = d.completedCount;
+      if (Array.isArray(d.completedDays) && d.completedDays.length === 3) completedDays = d.completedDays;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function fmt(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  function beep(freq = 820, ms = 110, vol = 0.25) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + ms / 1000);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + ms / 1000);
+    } catch (e) {}
+  }
+
+  function speak(text) {
+    if (!ttsOn || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ko-KR";
+      u.rate = 1.08;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function toggleTTS() {
+    ttsOn = !ttsOn;
+    $("ttsBtn").textContent = ttsOn ? "🔊 안내 켜짐" : "🔇 안내 꺼짐";
+    $("ttsBtn").classList.toggle("active", ttsOn);
+    if (!ttsOn && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }
+
+  function startMetroLoop() {
+    stopMetroLoop();
+    if (!metroOn || !running) return;
+    metroTimer = setInterval(() => {
+      const curr = getSteps()[stepIdx];
+      if (!curr || curr.type === "rest") return;
+      beep(curr.type === "hiit" ? 960 : 520, 45, 0.12);
+    }, 1000);
+  }
+
+  function stopMetroLoop() {
+    if (metroTimer) {
+      clearInterval(metroTimer);
+      metroTimer = null;
+    }
+  }
+
+  function toggleMetro() {
+    metroOn = !metroOn;
+    $("metroBtn").classList.toggle("active", metroOn);
+    $("metroBtn").textContent = metroOn ? "🥁 박자 켜짐" : "🥁 템포 박자";
+    if (metroOn && running) startMetroLoop();
+    else stopMetroLoop();
+  }
+
+  function toggleGuideBox() {
+    guideOpen = !guideOpen;
+    $("guideContent").style.display = guideOpen ? "grid" : "none";
+    $("guideToggleBtn").textContent = guideOpen ? "접기 ▲" : "펼치기 ▼";
+  }
+
+  function initVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      $("voiceMsg").textContent = "이 브라우저는 음성 인식을 지원하지 않습니다.";
+      return null;
+    }
+    const r = new SR();
+    r.lang = "ko-KR";
+    r.continuous = true;
+    r.interimResults = false;
+    r.onstart = () => {
+      $("micDot").classList.add("on");
+      $("voiceMsg").textContent = "듣는 중... (“10초” / “20초” / “그만”)";
+    };
+    r.onresult = (e) => {
+      const now = Date.now();
+      if (now - lastVoiceTs < 1200) return;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (!e.results[i].isFinal) continue;
+        const raw = e.results[i][0].transcript.trim();
+        const norm = raw.toLowerCase().replace(/\s+/g, "");
+        $("voiceMsg").textContent = `인식됨: “${raw}”`;
+
+        if (/20초|이십초|20초더|이십초더|20초추가|이십초추가|twenty|20seconds/.test(norm)) {
+          lastVoiceTs = now;
+          addSec(20);
+          break;
+        } else if (/10초|십초|10초더|십초더|10초추가|십초추가|ten|10seconds/.test(norm)) {
+          lastVoiceTs = now;
+          addSec(10);
+          break;
+        } else if (/그만|스톱|stop|skip|패스|다음/.test(norm)) {
+          lastVoiceTs = now;
+          skipStep();
+          break;
+        }
+      }
+    };
+    r.onerror = (e) => {
+      if (e.error === "not-allowed") {
+        voiceOn = false;
+        updateVoiceBtn();
+        $("voiceMsg").textContent = "마이크 권한이 차단되었습니다.";
+      }
+    };
+    r.onend = () => {
+      if (voiceOn) {
+        try { r.start(); } catch (e) {}
+      } else {
+        $("micDot").classList.remove("on");
+        $("voiceMsg").textContent = "음성 대기 (“10초” / “20초” / “그만”)";
+      }
+    };
+    return r;
+  }
+
+  function updateVoiceBtn() {
+    $("voiceBtn").textContent = voiceOn ? "🎙 음성 켜짐" : "🎙 음성 켜기";
+    $("voiceBtn").classList.toggle("active", voiceOn);
+    $("micDot").classList.toggle("on", voiceOn);
+  }
+
+  function toggleVoice() {
+    if (!rec) {
+      rec = initVoice();
+      if (!rec) return;
+    }
+    if (voiceOn) {
+      voiceOn = false;
+      rec.stop();
+    } else {
+      voiceOn = true;
+      try { rec.start(); } catch (e) {}
+    }
+    updateVoiceBtn();
+  }
+
+  function getSteps() { return plans[dayIdx].steps; }
+
+  function calcTotalRemain() {
+    const steps = getSteps();
+    let total = remaining;
+    for (let i = stepIdx + 1; i < steps.length; i++) total += steps[i].sec;
+    return total;
+  }
+
+  function renderGuide(curr) {
+    const cleanTitle = curr.name.replace(/<[^>]+>/g, "");
+    currentPoseKind = curr.pose || "stretch";
+    const def = POSES[currentPoseKind];
+    $("targetMusclePill").textContent = curr.type === "rest" ? "호흡 회복" : (def ? def.target : "전신");
+    $("howtoTitle").textContent = `${cleanTitle} 따라하기`;
+    $("howtoSteps").innerHTML = (curr.steps || []).map(line => `<li>${line}</li>`).join("");
+    $("cueInline").textContent = `💡 ${curr.cue}`;
+  }
+
+  function renderTabs() {
+    document.querySelectorAll(".day-tab").forEach((el, i) => {
+      el.classList.toggle("active", i === dayIdx);
+      el.classList.toggle("completed", !!completedDays[i]);
+    });
+    $("streakBadge").textContent = `누적 완료 ${completedCount}회`;
+  }
+
+  function renderSteps() {
+    const steps = getSteps();
+    const ul = $("stepList");
+    ul.innerHTML = "";
+    steps.forEach((st, idx) => {
+      const li = document.createElement("li");
+      li.className = "step-item";
+      if (idx === stepIdx) li.classList.add("active-step");
+      else if (idx < stepIdx) li.classList.add("done-step");
+      li.innerHTML = `
+        <div class="step-left">
+          <span class="step-name">${idx + 1}. ${st.name}</span>
+          <span class="step-meta">[${st.block}] ${st.spec}</span>
+        </div>
+        <span class="step-time">${fmt(st.sec)}</span>
+      `;
+      li.onclick = () => jumpTo(idx);
+      ul.appendChild(li);
+    });
+  }
+
+  function updateUI() {
+    const plan = plans[dayIdx];
+    const steps = plan.steps;
+    const curr = steps[stepIdx];
+    const next = steps[stepIdx + 1];
+
+    renderTabs();
+    renderGuide(curr);
+
+    $("listTitle").textContent = `${plan.label} 상세 스케줄`;
+    $("stepCounter").textContent = `단계 ${stepIdx + 1} / ${steps.length}`;
+    $("kcalEst").textContent = `예상 소모 ${Math.round(burnedKcal)} kcal`;
+    $("remainTotal").textContent = `남은 시간 ${fmt(calcTotalRemain())}`;
+    $("progressBar").style.width = `${(stepIdx / steps.length) * 100}%`;
+
+    document.body.className = `mode-${curr.type}`;
+    const badge = $("blockBadge");
+    badge.textContent = curr.block;
+    badge.className = `block-badge ${curr.type}`;
+
+    $("moveTitle").innerHTML = curr.name;
+    $("moveSpec").textContent = curr.spec;
+    const clockEl = $("clock");
+    clockEl.textContent = fmt(remaining);
+    clockEl.classList.toggle("warn", running && remaining <= 5 && remaining > 0);
+
+    $("nextLine").innerHTML = next ? `다음: <strong>${next.name}</strong> (${fmt(next.sec)})` : "이 단계가 끝나면 오늘 맨몸 세션이 완료됩니다!";
+
+    const sBtn = $("startBtn");
+    if (running) {
+      sBtn.textContent = "Ⅱ 일시정지";
+      sBtn.classList.add("running");
+    } else {
+      sBtn.textContent = remaining === curr.sec && stepIdx === 0 ? "▶ 시작" : "▶ 계속하기";
+      sBtn.classList.remove("running");
+    }
+    renderSteps();
+    saveState();
+  }
+
+  function enterStep(idx, autoSpeak = true) {
+    const steps = getSteps();
+    stepIdx = Math.max(0, Math.min(idx, steps.length - 1));
+    remaining = steps[stepIdx].sec;
+    beep(steps[stepIdx].type === "hiit" ? 1050 : 750, 180);
+    if (autoSpeak) {
+      const cleanName = steps[stepIdx].name.replace(/<[^>]+>/g, "");
+      speak(`${cleanName} 시작`);
+    }
+    updateUI();
+  }
+
+  function tick() {
+    const curr = getSteps()[stepIdx];
+    if (curr) {
+      burnedKcal += ((curr.met || 5.0) * 3.5 * WEIGHT_KG) / 12000;
+    }
+
+    if (remaining > 1) {
+      remaining--;
+      if (remaining === 10) {
+        speak("10초 남았습니다");
+      }
+      if (remaining <= 3) {
+        beep(650, 90);
+      }
+      updateUI();
+    } else {
+      const steps = getSteps();
+      if (stepIdx < steps.length - 1) {
+        enterStep(stepIdx + 1, true);
+      } else {
+        clearInterval(timer);
+        timer = null;
+        running = false;
+        stopMetroLoop();
+        remaining = 0;
+        completedCount++;
+        completedDays[dayIdx] = true;
+        saveState();
+        renderTabs();
+
+        document.body.className = "mode-done";
+        $("progressBar").style.width = "100%";
+        $("clock").textContent = "00:00";
+        $("clock").classList.remove("warn");
+        $("blockBadge").textContent = "COMPLETE";
+        $("moveTitle").textContent = `오늘 60분 맨몸 세션 완료! (약 ${Math.round(burnedKcal)} kcal)`;
+        $("moveSpec").textContent = "수고하셨습니다 · 수분과 단백질을 보충하세요";
+        $("startBtn").textContent = "▶ 다시 시작";
+        $("startBtn").classList.remove("running");
+        beep(1200, 450);
+        speak("오늘 운동 세션을 모두 완료했습니다. 수고하셨습니다.");
+      }
+    }
+  }
+
+  async function toggleRun() {
+    if (running) {
+      clearInterval(timer);
+      timer = null;
+      running = false;
+      stopMetroLoop();
+      updateUI();
+    } else {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if ("speechSynthesis" in window) {
+        speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+      }
+      if ("wakeLock" in navigator) {
+        try { await navigator.wakeLock.request("screen"); } catch (e) {}
+      }
+      if (remaining <= 0) {
+        burnedKcal = 0;
+        enterStep(0, true);
+      } else {
+        const cleanName = getSteps()[stepIdx].name.replace(/<[^>]+>/g, "");
+        speak(`${cleanName} 진행`);
+      }
+      running = true;
+      timer = setInterval(tick, 1000);
+      startMetroLoop();
+      updateUI();
+    }
+  }
+
+  function addSec(s) {
+    remaining += s;
+    beep(s >= 20 ? 1150 : 950, 120);
+    updateUI();
+  }
+
+  function skipStep() {
+    const steps = getSteps();
+    if (stepIdx < steps.length - 1) {
+      enterStep(stepIdx + 1, true);
+    } else {
+      remaining = 1;
+      tick();
+    }
+  }
+
+  function prevStep() {
+    if (stepIdx > 0) {
+      enterStep(stepIdx - 1, true);
+    } else {
+      remaining = getSteps()[0].sec;
+      updateUI();
+    }
+  }
+
+  function jumpTo(idx) {
+    enterStep(idx, running);
+  }
+
+  function resetSession() {
+    clearInterval(timer);
+    timer = null;
+    running = false;
+    stopMetroLoop();
+    stepIdx = 0;
+    burnedKcal = 0;
+    remaining = getSteps()[0].sec;
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    updateUI();
+  }
+
+  function selectDay(idx) {
+    dayIdx = idx;
+    resetSession();
+  }
+
+  if (!loadState()) {
+    remaining = getSteps()[0].sec;
+  }
+  updateUI();
+  startPoseAnimation();
+</script>
+</body>
+</html>
