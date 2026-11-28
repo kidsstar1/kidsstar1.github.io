@@ -1,0 +1,3052 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>전설의 대장장이: 검 키우기 (Legend Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #050811;
+            color: #f8fafc;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0b1120; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+
+        /* 데미지 및 힐 팝업 애니메이션 */
+        @keyframes floatDamage {
+            0% { opacity: 1; transform: translate(-50%, 0) scale(0.75); }
+            20% { opacity: 1; transform: translate(-50%, -16px) scale(1.25); }
+            100% { opacity: 0; transform: translate(-50%, -56px) scale(0.95); }
+        }
+        .dmg-popup {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 900;
+            animation: floatDamage 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 4px rgba(0,0,0,0.85);
+            z-index: 40;
+            white-space: nowrap;
+        }
+
+        /* 참격 궤적 */
+        @keyframes slashSweep {
+            0% { opacity: 0; transform: scale(0.45) rotate(-30deg); }
+            30% { opacity: 1; transform: scale(1.18) rotate(0deg); }
+            100% { opacity: 0; transform: scale(1.35) rotate(18deg); }
+        }
+        .slash-fx {
+            position: absolute;
+            pointer-events: none;
+            z-index: 35;
+            animation: slashSweep 0.28s ease-out forwards;
+        }
+
+        /* 몬스터 호흡 & 피격 & 오버킬 연출 */
+        @keyframes monsterBreathe {
+            0%, 100% { transform: translateY(0px) scale(1, 1); }
+            50% { transform: translateY(-4px) scale(1.03, 0.97); }
+        }
+        .monster-idle { animation: monsterBreathe 2.1s ease-in-out infinite; }
+
+        @keyframes monsterHit {
+            0% { transform: translateX(0) scale(1); filter: brightness(1); }
+            25% { transform: translateX(16px) scale(0.88); filter: brightness(2.4) saturate(2); }
+            60% { transform: translateX(-6px) scale(1.04); }
+            100% { transform: translateX(0) scale(1); filter: brightness(1); }
+        }
+        .m-hit { animation: monsterHit 0.24s ease-out; }
+
+        @keyframes monsterOverkill {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; filter: brightness(2.8); }
+            45% { transform: translate(28px, -20px) rotate(20deg) scale(0.85); opacity: 0.9; filter: brightness(1.8) hue-rotate(-30deg); }
+            100% { transform: translate(60px, 14px) rotate(45deg) scale(0.4); opacity: 0; }
+        }
+        .m-overkill { animation: monsterOverkill 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        @keyframes playerSlash {
+            0% { transform: translateX(0) rotate(0deg); }
+            35% { transform: translateX(24px) rotate(22deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        .p-slash { animation: playerSlash 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+
+        @keyframes swordIdleSwing {
+            0%, 100% { transform: rotate(-14deg) translateY(0px); }
+            50% { transform: rotate(-6deg) translateY(-4px); }
+        }
+        .sword-float { animation: swordIdleSwing 2.2s ease-in-out infinite; }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 4px); }
+            40% { transform: translate(6px, -4px); }
+            60% { transform: translate(-4px, -2px); }
+            80% { transform: translate(4px, 3px); }
+        }
+        .shake-screen { animation: screenShake 0.28s ease-in-out; }
+
+        @keyframes hammerStrike {
+            0% { transform: rotate(-55deg) translateY(-18px); }
+            45% { transform: rotate(15deg) translateY(4px) scale(1.12); }
+            100% { transform: rotate(-35deg) translateY(-8px); }
+        }
+        .hammer-anim { animation: hammerStrike 0.24s cubic-bezier(0.36, 0, 0.66, -0.56); }
+
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-slow { animation: spinSlow 10s linear infinite; }
+
+        /* 피버 모드 불꽃 테두리 */
+        .fever-border {
+            box-shadow: inset 0 0 28px rgba(249, 115, 22, 0.65), 0 0 22px rgba(234, 179, 8, 0.55);
+            border-color: #f59e0b !important;
+        }
+
+        /* 고강화 네온 오라 */
+        .aura-tier-1 { filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85)); }
+        .aura-tier-2 { filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.95)); }
+        .aura-tier-3 { filter: drop-shadow(0 0 14px rgba(244, 63, 94, 0.95)) drop-shadow(0 0 6px rgba(168, 85, 247, 0.9)); }
+
+        /* 변이 엘리트 몬스터 오라 */
+        .mutant-golden { filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.95)); }
+        .mutant-berserk { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.95)); }
+        .mutant-vampire { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.95)); }
+        .mutant-armored { filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.95)); }
+
+        .slot-card { transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease; }
+        .slot-card:active { transform: scale(0.93); }
+        .slot-selected {
+            border-color: #fbbf24 !important;
+            background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+            box-shadow: 0 0 16px rgba(251, 191, 36, 0.45);
+        }
+        .slot-merge-ready {
+            border-color: #34d399 !important;
+            box-shadow: 0 0 14px rgba(52, 211, 153, 0.6);
+        }
+    </style>
+</head>
+<body id="appRoot" class="min-h-screen flex flex-col max-w-2xl mx-auto bg-slate-950 border-x border-slate-800/90 shadow-2xl relative">
+
+    <!-- 화면 플래시 & 파티클 캔버스 -->
+    <div id="flashLayer" class="fixed inset-0 pointer-events-none z-50 transition-opacity duration-300 opacity-0"></div>
+    <canvas id="fxCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- 상단 헤더 & 4대 핵심 재화 -->
+    <header class="bg-slate-900/95 backdrop-blur border-b border-slate-800 px-3 py-2 sticky top-0 z-30">
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-base">⚒️</span>
+                <h1 class="font-black text-sm sm:text-base tracking-tight bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent truncate">
+                    전설의 대장장이 : 검 키우기
+                </h1>
+                <span id="activeTitleBadge" class="px-1.5 py-0.5 rounded bg-purple-950/90 border border-purple-500/40 text-[10px] font-bold text-purple-300 shrink-0">
+                    견습 대장장이
+                </span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button id="soundToggleBtn" onclick="toggleSound()" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold border border-slate-700">
+                    🔊 ON
+                </button>
+                <button onclick="openModal('settingsModal')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold border border-slate-700">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+            <div class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1">
+                <span class="text-slate-400 text-[10px] block leading-none">골드</span>
+                <span id="goldDisplay" class="font-bold text-amber-400 text-xs truncate block mt-0.5">0 G</span>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1">
+                <span class="text-slate-400 text-[10px] block leading-none">다이아</span>
+                <span id="gemDisplay" class="font-bold text-cyan-400 text-xs truncate block mt-0.5">0 💎</span>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1">
+                <span class="text-slate-400 text-[10px] block leading-none">검의 파편</span>
+                <span id="shardDisplay" class="font-bold text-rose-400 text-xs truncate block mt-0.5">0 🧩</span>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1">
+                <span class="text-slate-400 text-[10px] block leading-none">초월석</span>
+                <span id="stoneDisplay" class="font-bold text-purple-400 text-xs truncate block mt-0.5">0 🔮</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 상단 실시간 전투 아레나 -->
+    <section class="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800 p-2.5 select-none">
+        <!-- 스테이지 · 지역 테마 · 자동 후퇴 · 보스 호출 -->
+        <div class="flex items-center justify-between mb-2 gap-1.5 flex-wrap">
+            <div class="flex items-center gap-1.5">
+                <span id="stageBadge" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs">
+                    STAGE 1
+                </span>
+                <span id="zoneThemeBadge" class="px-2 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 font-bold text-[10px]">
+                    🌿 고요한 초원
+                </span>
+                <span id="stageProgressText" class="text-[11px] text-slate-300 font-bold">0/5</span>
+                <span id="dungeonBadge" class="hidden px-2 py-0.5 rounded-full bg-purple-600/30 border border-purple-500 text-purple-200 font-bold text-[11px]">
+                    🏰 던전
+                </span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <button id="bossChallengeBtn" onclick="startBossBattle()" class="hidden px-2.5 py-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-[11px] shadow-lg shadow-red-900/50 animate-bounce">
+                    👹 보스 도전!
+                </button>
+                <div id="battleTimerBox" class="hidden px-2 py-0.5 rounded-full bg-red-950 border border-red-500 text-red-300 font-bold text-[11px]">
+                    ⏱️ <span id="battleTimerText">22.0</span>s
+                </div>
+                <button id="autoRetreatBtn" onclick="toggleAutoRetreat()" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] font-bold text-cyan-300">
+                    🛡️ 안전후퇴 ON
+                </button>
+                <button id="restToggleBtn" onclick="toggleRestMode()" class="px-2 py-1 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 font-bold text-[10px]">
+                    ⛺ 휴식
+                </button>
+            </div>
+        </div>
+
+        <!-- 배틀 스테이지 (지역 테마 배경 동적 전환 + 피버 테두리) -->
+        <div id="battleArena" onclick="handleManualAttack(event)" class="relative rounded-2xl bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950/40 via-[#080c17] to-black border border-slate-800 overflow-hidden cursor-pointer flex flex-col justify-between p-2.5 transition-all duration-300">
+            <!-- 상단 장착 무기 요약 & 피버 게이지/콤보 -->
+            <div class="flex items-start justify-between gap-2 z-10">
+                <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1 flex items-center gap-2">
+                    <div id="eqSvgMini" class="w-7 h-7 flex items-center justify-center shrink-0"></div>
+                    <div>
+                        <div id="eqName" class="text-[11px] font-black text-slate-100 leading-tight">맨손 상태</div>
+                        <div class="text-[10px] font-bold flex items-center gap-2">
+                            <span class="text-amber-400">⚔️ <span id="statAtkText">10</span></span>
+                            <span class="text-emerald-400">❤️ +<span id="statSwordHpText">0</span></span>
+                            <span id="tacticalCountBadge" class="hidden text-purple-300">🃏 <span id="tacticalCountText">0</span>장</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-1">
+                    <!-- 피버 게이지 바 -->
+                    <div class="bg-slate-900/90 border border-slate-700/80 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                        <span id="feverLabel" class="text-[10px] font-black text-orange-400">🔥 FEVER</span>
+                        <div class="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="feverGaugeBar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 transition-all duration-100" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="comboBadge" class="hidden px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-black text-[10px]">
+                        ⚡ <span id="comboCountText">0</span> COMBO
+                    </div>
+                    <div id="berserkBadge" class="hidden px-2 py-0.5 rounded-full bg-red-600/30 border border-red-500 text-red-200 font-black text-[10px] animate-pulse">
+                        🔥 광폭화 발동!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 중앙 플레이어 & 커스텀 SVG 무기 & 20종 커스텀 SVG 몬스터 대치 -->
+            <div class="flex items-center justify-around px-1 my-auto z-10 py-2">
+                <!-- 플레이어 & 장착 검 SVG -->
+                <div class="flex flex-col items-center w-36">
+                    <div id="playerVisual" class="relative flex items-center justify-center h-20 mb-1">
+                        <!-- 대장장이 커스텀 SVG 캐릭터 -->
+                        <svg viewBox="0 0 100 100" class="w-14 h-14 drop-shadow-[0_4px_10px_rgba(34,211,238,0.35)]">
+                            <circle cx="50" cy="54" r="34" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+                            <!-- 투구/머리 -->
+                            <path d="M30 42 Q50 20 70 42 L68 58 Q50 66 32 58 Z" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
+                            <rect x="34" y="42" width="32" height="9" rx="3" fill="#020617"/>
+                            <!-- 빛나는 눈 -->
+                            <circle cx="42" cy="46.5" r="2.5" fill="#38bdf8"/>
+                            <circle cx="58" cy="46.5" r="2.5" fill="#38bdf8"/>
+                            <!-- 망토 & 갑옷 -->
+                            <path d="M26 76 Q50 62 74 76 L78 88 L22 88 Z" fill="#1e293b" stroke="#38bdf8" stroke-width="1.8"/>
+                            <polygon points="50,65 56,74 50,83 44,74" fill="#fbbf24"/>
+                        </svg>
+                        <div id="playerWeaponSvg" class="w-14 h-14 -ml-3 sword-float flex items-center justify-center"></div>
+                    </div>
+                    <span class="text-[10px] font-bold text-cyan-300 mb-1">대장장이 (나)</span>
+                    <!-- 플레이어 HP 바 -->
+                    <div class="w-full bg-slate-900 h-3.5 rounded-full overflow-hidden border border-slate-700 relative">
+                        <div id="playerHpBar" class="h-full bg-gradient-to-r from-emerald-600 to-green-400 transition-all duration-100" style="width: 100%"></div>
+                        <span id="playerHpText" class="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow">
+                            100 / 100
+                        </span>
+                    </div>
+                </div>
+
+                <div class="text-slate-600 font-black text-xs italic">VS</div>
+
+                <!-- 20종 커스텀 SVG 몬스터 + 변이 오라 + 보스 마법진 -->
+                <div class="flex flex-col items-center w-36 relative">
+                    <div id="bossChargeAlert" class="hidden absolute -top-5 px-2 py-0.5 rounded bg-red-600 text-white font-black text-[10px] animate-bounce shadow-lg z-20 whitespace-nowrap">
+                        ⚠️ 강타 예고! (방어/회복!)
+                    </div>
+                    <div id="treasureEscapeAlert" class="hidden absolute -top-5 px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px] animate-pulse shadow-lg z-20 whitespace-nowrap">
+                        💰 보물 고블린! 도주까지 <span id="treasureTimerText">10.0</span>s
+                    </div>
+
+                    <div class="relative h-20 w-24 flex items-center justify-center mb-1">
+                        <!-- 보스 전용 회전 마법진 배경 -->
+                        <svg id="bossMagicCircle" viewBox="0 0 120 120" class="hidden absolute inset-0 w-full h-full spin-slow opacity-70 pointer-events-none">
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="8 4"/>
+                            <circle cx="60" cy="60" r="40" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+                            <polygon points="60,10 103,85 17,85" fill="none" stroke="#f43f5e" stroke-width="1.5"/>
+                            <polygon points="60,110 103,35 17,35" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+                        </svg>
+                        <!-- 몬스터 SVG 컨테이너 -->
+                        <div id="monsterVisual" class="w-20 h-20 flex items-center justify-center monster-idle drop-shadow-[0_6px_12px_rgba(0,0,0,0.9)]"></div>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-1 mb-1 max-w-full">
+                        <span id="monsterMutantBadge" class="hidden px-1 rounded text-[9px] font-black shrink-0">변이</span>
+                        <span id="monsterName" class="text-[10px] font-bold text-rose-300 truncate">초원 슬라임</span>
+                        <span id="monsterDefBadge" class="px-1 rounded bg-slate-800 border border-slate-600 text-[9px] font-black text-slate-300 shrink-0">
+                            🛡️0
+                        </span>
+                    </div>
+
+                    <!-- 몬스터 HP 바 + 피격 잔상(Ghost) 레이어 -->
+                    <div class="w-full bg-slate-900 h-3.5 rounded-full overflow-hidden border border-slate-700 relative">
+                        <div id="monsterGhostHpBar" class="absolute inset-y-0 left-0 bg-amber-400 transition-all duration-300 ease-out" style="width: 100%"></div>
+                        <div id="monsterHpBar" class="relative h-full bg-gradient-to-r from-rose-600 to-red-500 transition-all duration-75" style="width: 100%"></div>
+                        <span id="monsterHpText" class="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow">
+                            100 / 100
+                        </span>
+                    </div>
+                    <!-- 몬스터 공격 게이지 -->
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-1 border border-slate-800">
+                        <div id="monsterAtkBar" class="h-full bg-amber-400 transition-all duration-75" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-[10px] text-slate-500 z-10">
+                화면을 터치해 직접 베기! (피버 달성 시 공속·골드 2배 폭발!)
+            </div>
+
+            <!-- 전투 불능 / 휴식 회복 오버레이 -->
+            <div id="recoveryOverlay" class="hidden absolute inset-0 bg-slate-950/92 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-3 text-center">
+                <div class="text-2xl mb-0.5">⛺</div>
+                <h3 id="recoveryTitle" class="font-black text-sm text-rose-400">체력이 고갈되어 후퇴했습니다!</h3>
+                <p id="recoveryDesc" class="text-xs text-slate-300 mt-0.5">안전 구역에서 체력을 회복 중입니다...</p>
+                <div class="w-48 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700 mt-2">
+                    <div id="recoveryBar" class="h-full bg-emerald-400 transition-all duration-150" style="width: 0%"></div>
+                </div>
+                <div class="flex gap-2 mt-2.5">
+                    <button onclick="event.stopPropagation(); resumeBattleNow();" class="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs">
+                        ⚔️ 즉시 복귀
+                    </button>
+                    <button onclick="event.stopPropagation(); usePotion();" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">
+                        🧪 즉시 완치 (<span id="overlayPotionCost">50 G</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 액티브 스킬 3종 & 회복 물약 -->
+        <div class="grid grid-cols-4 gap-1.5 mt-2">
+            <button id="skillBtn0" onclick="castSkill(0)" class="relative bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col items-center justify-center overflow-hidden active:scale-95 transition">
+                <div id="skillCd0" class="absolute inset-0 bg-black/80 flex items-center justify-center font-black text-xs text-amber-300 hidden">0s</div>
+                <span class="text-base">💥</span>
+                <span class="text-[10px] font-bold text-slate-200">일격필살</span>
+            </button>
+
+            <button id="skillBtn1" onclick="castSkill(1)" class="relative bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col items-center justify-center overflow-hidden active:scale-95 transition">
+                <div id="skillCd1" class="absolute inset-0 bg-black/80 flex items-center justify-center font-black text-xs text-rose-300 hidden">0s</div>
+                <span class="text-base">🩸</span>
+                <span class="text-[10px] font-bold text-slate-200">흡혈베기</span>
+            </button>
+
+            <button id="skillBtn2" onclick="castSkill(2)" class="relative bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col items-center justify-center overflow-hidden active:scale-95 transition">
+                <div id="skillCd2" class="absolute inset-0 bg-black/80 flex items-center justify-center font-black text-xs text-orange-300 hidden">0s</div>
+                <span class="text-base">🔥</span>
+                <span class="text-[10px] font-bold text-slate-200">광폭화</span>
+            </button>
+
+            <button onclick="usePotion()" class="bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-500/50 rounded-xl p-1.5 flex flex-col items-center justify-center active:scale-95 transition">
+                <span class="text-xs font-black text-emerald-300">🧪 회복물약</span>
+                <span id="potionCostText" class="text-[10px] font-bold text-amber-300">50 G</span>
+            </button>
+        </div>
+
+        <!-- 자동 스킬 & 실시간 반복 미션 -->
+        <div class="flex items-center justify-between gap-2 mt-2 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 text-[11px]">
+            <label class="flex items-center gap-1.5 text-slate-300 font-semibold cursor-pointer shrink-0">
+                <input type="checkbox" id="autoSkillCheckbox" onchange="toggleAutoSkill()" class="accent-amber-500 rounded">
+                <span>스킬 자동시전</span>
+            </label>
+
+            <div id="questBanner" onclick="claimQuestReward()" class="flex-1 flex items-center justify-end gap-1.5 cursor-pointer truncate">
+                <span id="questText" class="text-slate-300 truncate">🎯 몬스터 처치 (0/10)</span>
+                <span id="questRewardBadge" class="px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-bold shrink-0">💎 5</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 메인 컨텐츠 탭 영역 -->
+    <main class="flex-1 p-2.5 flex flex-col">
+        <!-- 탭 1: 대장간 (인벤토리 + 모루 강화 + 옵션 제련 + 판매/분해) -->
+        <div id="tab-forge" class="tab-panel flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                    <h2 class="font-black text-xs sm:text-sm text-slate-200">⚔️ 대장간 인벤토리</h2>
+                    <span id="invCountText" class="text-xs text-slate-400">(0/12)</span>
+                </div>
+                <div class="flex gap-1.5">
+                    <button onclick="autoMergeAll()" class="px-2.5 py-1 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/35 border border-emerald-500/50 text-emerald-300 text-xs font-black">
+                        ✨ 일괄합성
+                    </button>
+                    <button onclick="equipBestSword()" class="px-2.5 py-1 rounded-lg bg-amber-600/25 hover:bg-amber-600/35 border border-amber-500/50 text-amber-300 text-xs font-black">
+                        👑 최강장착
+                    </button>
+                </div>
+            </div>
+
+            <!-- 12칸 인벤토리 그리드 -->
+            <div id="inventoryGrid" class="grid grid-cols-4 gap-1.5"></div>
+
+            <!-- 선택한 검 모루 강화 / 옵션 제련 / 판매·분해 패널 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 relative overflow-hidden">
+                <div id="noSelectionState" class="py-3 text-center text-xs text-slate-400">
+                    검을 선택하면 <span class="text-amber-400 font-bold">모루 강화</span>, <span class="text-cyan-400 font-bold">옵션 제련(리롤)</span>, <span class="text-emerald-400 font-bold">판매/분해</span>가 가능합니다.<br>
+                    같은 단계의 검 2개를 연속 클릭하거나 드래그하면 상위 단계로 <span class="text-purple-400 font-bold">융합 합성</span>됩니다!
+                </div>
+
+                <div id="swordActionState" class="hidden flex flex-col gap-2">
+                    <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-xl px-2.5 py-1 text-[10px]">
+                        <span class="font-bold text-orange-300">🔥 모루 열기(연속 성공): <span id="enhanceStreakText" class="text-amber-400 font-black">0연승</span></span>
+                        <span id="overdriveBonusText" class="font-bold text-slate-400">보너스 성공률 +0%</span>
+                    </div>
+
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div id="anvilStage" class="relative w-16 h-16 rounded-2xl bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                                <div id="selSvgBox" class="w-13 h-13 flex items-center justify-center transition-transform"></div>
+                                <div id="anvilHammer" class="hidden absolute -top-1 -right-1 text-2xl pointer-events-none">🔨</div>
+                                <div id="anvilChargeWrap" class="hidden absolute bottom-1 inset-x-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="anvilChargeBar" class="h-full bg-amber-400 w-0"></div>
+                                </div>
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    <span id="selTierBadge" class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-black text-amber-400">1단계</span>
+                                    <span id="selPrefixBadge" class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-black text-slate-300">일반</span>
+                                    <h3 id="selName" class="font-black text-xs sm:text-sm text-white truncate">녹슨 단검</h3>
+                                </div>
+                                <div class="flex items-center gap-2.5 text-xs font-black mt-1">
+                                    <span class="text-amber-400">⚔️ <span id="selAtk">12</span></span>
+                                    <span class="text-emerald-400">❤️ +<span id="selHp">60</span></span>
+                                </div>
+                                <p id="selOptionDesc" class="text-[10px] text-cyan-300 mt-0.5 truncate">특수효과: 기본 제련 상태</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-1 shrink-0">
+                            <button onclick="rerollSwordPrefix()" class="px-2 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-[10px] font-black flex items-center justify-between gap-1.5">
+                                <span>🎲 옵션재설정</span>
+                                <span>🧩1</span>
+                            </button>
+                            <div class="flex gap-1">
+                                <button onclick="sellSelectedSword()" class="flex-1 px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-[10px] font-black">
+                                    판매 <span id="selSellPrice" class="block text-amber-400">+15G</span>
+                                </button>
+                                <button onclick="salvageSelectedSword()" class="flex-1 px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-[10px] font-black">
+                                    분해 <span id="selSalvageGain" class="block text-rose-400">+1🧩</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-1.5 text-center bg-slate-950/80 rounded-xl p-1.5 border border-slate-800/90 text-[11px]">
+                        <div>
+                            <span class="text-slate-400 text-[10px] block">성공 확률</span>
+                            <span id="enhSuccessRate" class="font-black text-emerald-400">90%</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[10px] block">실패 시</span>
+                            <span id="enhFailPenalty" class="font-black text-amber-400">유지</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[10px] block">파괴 확률</span>
+                            <span id="enhDestroyRate" class="font-black text-rose-400">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 bg-slate-800/80 px-2.5 py-2 rounded-xl border border-slate-700 cursor-pointer shrink-0">
+                            <input type="checkbox" id="useProtectShard" class="accent-rose-500 rounded">
+                            <span>파괴방지 (<span class="text-rose-400 font-bold">🧩1</span>)</span>
+                        </label>
+
+                        <button id="enhanceActionBtn" onclick="enhanceSelectedSword()" class="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-400 hover:to-red-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5">
+                            <span>🔨 모루 강화하기</span>
+                            <span id="enhCostText" class="text-xs bg-black/25 text-white px-2 py-0.5 rounded-lg font-bold">15 G</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 검 소환 버튼 -->
+            <button onclick="summonSword()" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm sm:text-base shadow-xl active:scale-[0.98] transition flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔥</span>
+                    <div class="text-left">
+                        <div id="summonTitle" class="leading-tight">녹슨 단검 제련 (1단계)</div>
+                        <div class="text-[10px] font-bold opacity-85">확률적으로 희귀~신화급 특수 옵션 부여!</div>
+                    </div>
+                </div>
+                <span id="summonCostText" class="px-3 py-1.5 rounded-xl bg-slate-950/25 font-black text-xs sm:text-sm">20 G</span>
+            </button>
+        </div>
+
+        <!-- 탭 2: 대장간 연구 · 4대 영혼석 각인 · 스킬 · 전술 카드 -->
+        <div id="tab-research" class="tab-panel hidden flex flex-col gap-3">
+            <!-- 신규: 4대 영혼석 각인 (룬 슬롯) -->
+            <div class="bg-gradient-to-br from-slate-900 via-[#10182b] to-slate-900 border border-cyan-500/40 rounded-2xl p-3">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="font-black text-sm text-cyan-300">💠 검의 영혼 각인 (4대 영혼석)</h2>
+                    <span class="text-[10px] font-bold text-slate-400">검의 파편(🧩)으로 영구 각인</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2.5">장착한 모든 검에 4대 정령의 영혼석을 각인해 전투 능력을 극대화합니다.</p>
+                <div id="soulStoneList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-amber-400 mb-2">⚒️ 대장장이 능력 & 화로 연구</h2>
+                <div id="upgradeList" class="flex flex-col gap-2"></div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-cyan-400 mb-2">⚡ 액티브 스킬 레벨업</h2>
+                <div id="skillUpgradeList" class="flex flex-col gap-2"></div>
+            </div>
+
+            <div class="bg-slate-900 border border-purple-500/30 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-purple-300 mb-1">🃏 획득한 보스 전술 버프 카드</h2>
+                <p class="text-[11px] text-slate-400 mb-2">스테이지 보스를 처치할 때마다 선택한 영구 축복입니다.</p>
+                <div id="ownedTacticalList" class="grid grid-cols-2 gap-1.5 text-xs"></div>
+            </div>
+        </div>
+
+        <!-- 탭 3: 유물 · 도감 · 칭호 -->
+        <div id="tab-relics" class="tab-panel hidden flex flex-col gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-amber-400 mb-1">🏅 대장장이 칭호 & 업적</h2>
+                <p class="text-[11px] text-slate-400 mb-2">달성한 칭호의 능력치는 모두 영구 중첩 적용됩니다.</p>
+                <div id="achievementList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h2 class="font-black text-sm text-purple-400">🏺 고대 유물 소환</h2>
+                        <p class="text-[11px] text-slate-400">다이아(💎)로 영구 패시브 유물을 소환합니다.</p>
+                    </div>
+                    <button onclick="summonRelic()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black text-xs shadow-lg active:scale-95 transition">
+                        ✨ 유물 뽑기 (30 💎)
+                    </button>
+                </div>
+                <div id="relicList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="font-black text-sm text-cyan-400">📖 전설의 검 도감 (15종)</h2>
+                    <span id="codexProgressBadge" class="text-xs font-bold text-amber-400">1 / 15 수집</span>
+                </div>
+                <div id="codexList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+        </div>
+
+        <!-- 탭 4: 도박장 · 던전 · 초월 -->
+        <div id="tab-dungeon" class="tab-panel hidden flex flex-col gap-3">
+            <div class="bg-gradient-to-br from-slate-900 via-[#150f24] to-slate-900 border border-amber-500/40 rounded-2xl p-3 shadow-xl">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h2 class="font-black text-sm text-amber-300">🎰 지하 도박장 : 황금의 주사위</h2>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">일확천금 찬스!</span>
+                </div>
+                <p class="text-[11px] text-slate-300 mb-2.5">보유 골드를 걸고 배율을 선택하세요! 대박이 터지면 단숨에 최고급 검을 제련할 수 있습니다.</p>
+
+                <div class="grid grid-cols-4 gap-1.5 mb-2.5 text-xs">
+                    <button onclick="setBetRatio(0.1)" id="betRatio-0.1" class="bet-ratio-btn py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black">10%</button>
+                    <button onclick="setBetRatio(0.25)" id="betRatio-0.25" class="bet-ratio-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-bold">25%</button>
+                    <button onclick="setBetRatio(0.5)" id="betRatio-0.5" class="bet-ratio-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-bold">50%</button>
+                    <button onclick="setBetRatio(1.0)" id="betRatio-1" class="bet-ratio-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-bold">올인!</button>
+                </div>
+
+                <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2 mb-2.5 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">현재 베팅 예정 금액:</span>
+                    <span id="currentBetAmountText" class="font-black text-amber-400 text-sm">0 G</span>
+                </div>
+
+                <div id="gambleDisplayBox" class="h-14 rounded-xl bg-slate-950 border border-slate-800 mb-2.5 flex items-center justify-center text-sm font-black text-slate-300 px-2 text-center">
+                    🎲 아래 배율 버튼을 눌러 주사위를 굴리세요!
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="playGamble(2, 46)" class="py-2.5 px-2 rounded-xl bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-300 font-black text-xs flex flex-col items-center active:scale-95 transition">
+                        <span class="text-sm">2배 배당</span>
+                        <span class="text-[10px] opacity-85">성공률 46%</span>
+                    </button>
+                    <button onclick="playGamble(5, 18)" class="py-2.5 px-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/50 text-amber-300 font-black text-xs flex flex-col items-center active:scale-95 transition">
+                        <span class="text-sm">5배 대박</span>
+                        <span class="text-[10px] opacity-85">성공률 18%</span>
+                    </button>
+                    <button onclick="playGamble(15, 5)" class="py-2.5 px-2 rounded-xl bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/50 text-rose-300 font-black text-xs flex flex-col items-center active:scale-95 transition">
+                        <span class="text-sm">15배 잭팟</span>
+                        <span class="text-[10px] opacity-85">성공률 5%</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-rose-400 mb-1">🏰 시련의 던전</h2>
+                <p class="text-[11px] text-slate-400 mb-2.5">수호자를 제한 시간 내에 처치하고 대량의 재화를 확보하세요!</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col justify-between gap-2">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-xs text-amber-400">💰 황금 고블린 소굴</span>
+                                <span id="goldDungeonTicket" class="text-[11px] font-bold text-slate-300">입장권: 3/3</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">현재 스테이지 보상의 <strong class="text-amber-300">30배 골드</strong> 획득!</p>
+                        </div>
+                        <button onclick="enterDungeon('gold')" class="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs">
+                            ⚔️ 골드 던전 입장
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-950 border border-rose-500/30 rounded-xl p-3 flex flex-col justify-between gap-2">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-xs text-rose-400">🧩 파편 수호자의 방</span>
+                                <span id="shardDungeonTicket" class="text-[11px] font-bold text-slate-300">입장권: 3/3</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">강화·리롤용 <strong class="text-rose-300">검의 파편 4~8개</strong> 획득!</p>
+                        </div>
+                        <button onclick="enterDungeon('shard')" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs">
+                            ⚔️ 파편 던전 입장
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-purple-500/30 rounded-2xl p-3">
+                <h2 class="font-black text-sm text-purple-400 mb-1">🔮 대장간 초월 (환생)</h2>
+                <p class="text-[11px] text-slate-300 leading-relaxed">
+                    <strong class="text-purple-300">스테이지 10 이상</strong> 도달 시 초월이 가능합니다. 골드, 인벤토리, 일반 연구가 초기화되는 대신 영구적인 <strong class="text-amber-300">초월석 🔮</strong>을 획득합니다.
+                </p>
+                <div class="mt-2.5 p-2.5 rounded-xl bg-slate-950 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">초월 시 획득 예정:</span>
+                    <span id="prestigeGainText" class="font-black text-base text-purple-400">+0 🔮</span>
+                </div>
+                <button id="doPrestigeBtn" onclick="performPrestige()" class="mt-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-xs sm:text-sm disabled:opacity-40">
+                    🔮 초월 실행하기 (스테이지 10 필요)
+                </button>
+
+                <div id="prestigeUpgradeList" class="mt-3 flex flex-col gap-2"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 하단 4대 탭 네비게이션 -->
+    <nav class="bg-slate-900 border-t border-slate-800 grid grid-cols-4 p-1.5 gap-1 sticky bottom-0 z-30">
+        <button onclick="switchTab('forge')" id="nav-forge" class="nav-btn py-2 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-black flex flex-col items-center">
+            <span>⚒️ 대장간</span>
+        </button>
+        <button onclick="switchTab('research')" id="nav-research" class="nav-btn py-2 rounded-xl bg-slate-800 border border-transparent text-slate-400 text-xs font-bold flex flex-col items-center">
+            <span>💠 각인·연구</span>
+        </button>
+        <button onclick="switchTab('relics')" id="nav-relics" class="nav-btn py-2 rounded-xl bg-slate-800 border border-transparent text-slate-400 text-xs font-bold flex flex-col items-center">
+            <span>🏺 유물·도감</span>
+        </button>
+        <button onclick="switchTab('dungeon')" id="nav-dungeon" class="nav-btn py-2 rounded-xl bg-slate-800 border border-transparent text-slate-400 text-xs font-bold flex flex-col items-center">
+            <span>🎰 도박·던전</span>
+        </button>
+    </nav>
+
+    <!-- 토스트 알림 -->
+    <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1.5 pointer-events-none w-full max-w-sm px-4"></div>
+
+    <!-- 보스 처치 전술 카드 3지선다 모달 -->
+    <div id="tacticalDraftModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3">
+        <div class="bg-slate-900 border-2 border-amber-500/60 rounded-2xl w-full max-w-md p-4 flex flex-col gap-3 shadow-2xl">
+            <div class="text-center">
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black text-xs">BOSS VICTORY!</span>
+                <h3 class="font-black text-base sm:text-lg text-white mt-1">🃏 전술 축복 카드를 1장 선택하세요</h3>
+                <p class="text-xs text-slate-400">선택한 카드의 능력치는 영구적으로 중첩됩니다.</p>
+            </div>
+            <div id="tacticalCardChoices" class="grid grid-cols-1 gap-2"></div>
+        </div>
+    </div>
+
+    <!-- 설정 모달 -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-black text-base text-slate-200">⚙️ 게임 설정 및 저장</h3>
+                <button onclick="closeModal('settingsModal')" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 font-bold">✕</button>
+            </div>
+            <p class="text-xs text-slate-400">진행 데이터는 15초마다 자동 저장되며, 접속 종료 중 오프라인 보상도 지급됩니다.</p>
+            <button onclick="saveGame(true)" class="w-full py-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs">
+                💾 지금 수동 저장하기
+            </button>
+            <button onclick="hardResetGame()" class="w-full py-2.5 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-300 font-bold text-xs">
+                ⚠️ 모든 데이터 초기화 (2회 클릭)
+            </button>
+        </div>
+    </div>
+
+<script>
+/**
+ * ============================================================================
+ * 1. 15단계 커스텀 벡터 SVG 검 렌더러
+ * ============================================================================
+ */
+const SWORD_THEMES = [
+    { blade: ['#94a3b8', '#475569'], edge: '#cbd5e1', guard: '#78350f', gem: '#64748b', style: 'chipped' },
+    { blade: ['#f59e0b', '#b45309'], edge: '#fde68a', guard: '#92400e', gem: '#38bdf8', style: 'gladius' },
+    { blade: ['#e2e8f0', '#64748b'], edge: '#ffffff', guard: '#334155', gem: '#3b82f6', style: 'longsword' },
+    { blade: ['#bae6fd', '#0284c7'], edge: '#f0f9ff', guard: '#eab308', gem: '#ef4444', style: 'claymore' },
+    { blade: ['#fb923c', '#dc2626'], edge: '#fef08a', guard: '#7f1d1d', gem: '#f97316', style: 'flamberge' },
+    { blade: ['#67e8f9', '#0891b2'], edge: '#ecfeff', guard: '#164e63', gem: '#a5f3fc', style: 'frost' },
+    { blade: ['#fde047', '#ca8a04'], edge: '#fefce8', guard: '#422006', gem: '#38bdf8', style: 'lightning' },
+    { blade: ['#f43f5e', '#881337'], edge: '#fecdd3', guard: '#1e1b4b', gem: '#fbbf24', style: 'dragon' },
+    { blade: ['#fef08a', '#eab308'], edge: '#ffffff', guard: '#ca8a04', gem: '#38bdf8', style: 'excalibur' },
+    { blade: ['#c084fc', '#4c1d95'], edge: '#f3e8ff', guard: '#1e1b4b', gem: '#f43f5e', style: 'abyss' },
+    { blade: ['#34d399', '#059669'], edge: '#d1fae5', guard: '#064e3b', gem: '#fde047', style: 'storm' },
+    { blade: ['#fbbf24', '#ea580c'], edge: '#fffbeb', guard: '#9a3412', gem: '#fef08a', style: 'sun' },
+    { blade: ['#818cf8', '#312e81'], edge: '#e0e7ff', guard: '#1e1b4b', gem: '#f472b6', style: 'galaxy' },
+    { blade: ['#22d3ee', '#7e22ce'], edge: '#cffafe', guard: '#0f172a', gem: '#f43f5e', style: 'dimension' },
+    { blade: ['#fef08a', '#f43f5e'], edge: '#ffffff', guard: '#eab308', gem: '#38bdf8', style: 'omega' }
+];
+
+function getSwordSvg(tier, plus = 0, sizeClass = "w-full h-full") {
+    const t = SWORD_THEMES[Math.min(14, Math.max(0, tier - 1))];
+    const uid = `sw_${tier}_${Math.random().toString(36).slice(2, 7)}`;
+
+    let auraClass = "";
+    if (plus >= 10) auraClass = "aura-tier-3";
+    else if (plus >= 7) auraClass = "aura-tier-2";
+    else if (plus >= 4) auraClass = "aura-tier-1";
+
+    const wingGuard = tier >= 8
+        ? `<path d="M22 68 L10 58 L28 63 L72 63 L90 58 L78 68 Z" fill="${t.guard}" stroke="${t.edge}" stroke-width="1.5"/>`
+        : `<rect x="26" y="62" width="48" height="7" rx="3.5" fill="${t.guard}" stroke="${t.edge}" stroke-width="1"/>`;
+
+    const haloRing = tier >= 12
+        ? `<circle cx="50" cy="42" r="34" fill="none" stroke="${t.edge}" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.75"/>`
+        : (tier >= 5 ? `<circle cx="50" cy="45" r="26" fill="none" stroke="${t.blade[0]}" stroke-width="1" stroke-dasharray="3 4" opacity="0.55"/>` : "");
+
+    const bladeCore = tier >= 4
+        ? `<line x1="50" y1="14" x2="50" y2="60" stroke="${t.edge}" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>`
+        : `<line x1="50" y1="18" x2="50" y2="60" stroke="${t.edge}" stroke-width="1.5" opacity="0.6"/>`;
+
+    const serration = t.style === 'flamberge' || t.style === 'dragon' || tier >= 13
+        ? `<polygon points="41,30 34,25 41,20" fill="${t.blade[0]}"/><polygon points="59,30 66,25 59,20" fill="${t.blade[0]}"/>
+           <polygon points="40,46 33,41 40,36" fill="${t.blade[0]}"/><polygon points="60,46 67,41 60,36" fill="${t.blade[0]}"/>`
+        : "";
+
+    return `
+    <svg viewBox="0 0 100 100" class="${sizeClass} ${auraClass} overflow-visible">
+        <defs>
+            <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${t.blade[0]}"/>
+                <stop offset="100%" stop-color="${t.blade[1]}"/>
+            </linearGradient>
+        </defs>
+        <g transform="rotate(35 50 50)">
+            ${haloRing}
+            ${serration}
+            <polygon points="50,6 60,22 58,63 42,63 40,22" fill="url(#${uid})" stroke="${t.edge}" stroke-width="1.6" stroke-linejoin="round"/>
+            ${bladeCore}
+            ${wingGuard}
+            <circle cx="50" cy="65.5" r="4.2" fill="${t.gem}" stroke="#ffffff" stroke-width="1.2"/>
+            <rect x="46" y="69" width="8" height="17" rx="2" fill="#1e293b" stroke="${t.guard}" stroke-width="1.5"/>
+            <line x1="46" y1="74" x2="54" y2="74" stroke="${t.guard}" stroke-width="1.5"/>
+            <line x1="46" y1="80" x2="54" y2="80" stroke="${t.guard}" stroke-width="1.5"/>
+            <circle cx="50" cy="89" r="5" fill="${t.guard}" stroke="${t.edge}" stroke-width="1.3"/>
+        </g>
+    </svg>`;
+}
+
+/**
+ * ============================================================================
+ * 2. 22종 커스텀 다층 벡터 SVG 몬스터 & 지역 테마 & 변이 시스템
+ * ============================================================================
+ */
+const ZONE_THEMES = [
+    { minStage: 1,  name: "🌿 고요한 초원",   bg: "from-emerald-950/50 via-[#080c17] to-black", badge: "bg-emerald-950/90 border-emerald-500/40 text-emerald-300" },
+    { minStage: 4,  name: "🌲 어둠의 고대숲", bg: "from-teal-950/50 via-[#070d16] to-black",    badge: "bg-teal-950/90 border-teal-500/40 text-teal-300" },
+    { minStage: 7,  name: "🪦 저주받은 묘지", bg: "from-purple-950/50 via-[#0a0814] to-black",  badge: "bg-purple-950/90 border-purple-500/40 text-purple-300" },
+    { minStage: 10, name: "🌋 작열하는 화산", bg: "from-red-950/60 via-[#120709] to-black",     badge: "bg-red-950/90 border-red-500/40 text-red-300" },
+    { minStage: 14, name: "🕳️ 공허의 심연",   bg: "from-indigo-950/60 via-[#060612] to-black",  badge: "bg-indigo-950/90 border-indigo-500/40 text-indigo-300" },
+    { minStage: 18, name: "⚡ 천공의 신전",   bg: "from-amber-950/55 via-[#0d0b14] to-black",   badge: "bg-amber-950/90 border-amber-500/40 text-amber-300" }
+];
+
+function getCurrentZoneTheme(stage) {
+    let current = ZONE_THEMES[0];
+    for (const z of ZONE_THEMES) {
+        if (stage >= z.minStage) current = z;
+    }
+    return current;
+}
+
+const MONSTER_ROSTER = [
+    // 초원 (1~3)
+    { id: 'slime',       name: "에메랄드 슬라임",   zone: 0, body: '#10b981', dark: '#047857', eye: '#fef08a', shape: 'slime' },
+    { id: 'goblin',      name: "단검 고블린 도적",  zone: 0, body: '#65a30d', dark: '#365314', eye: '#ef4444', shape: 'goblin' },
+    { id: 'boar',        name: "강철 엄니 멧돼지",  zone: 0, body: '#92400e', dark: '#451a03', eye: '#fbbf24', shape: 'beast' },
+    // 고대숲 (4~6)
+    { id: 'werewolf',    name: "광란의 늑대인간",   zone: 1, body: '#475569', dark: '#1e293b', eye: '#f43f5e', shape: 'beast' },
+    { id: 'ent',         name: "고대 나무 정령",    zone: 1, body: '#78350f', dark: '#14532d', eye: '#34d399', shape: 'golem' },
+    { id: 'spider',      name: "맹독 거대 거미",    zone: 1, body: '#581c87', dark: '#1e1b4b', eye: '#a3e635', shape: 'eye' },
+    // 묘지 (7~9)
+    { id: 'skeleton',    name: "저주받은 해골 검사", zone: 2, body: '#e2e8f0', dark: '#64748b', eye: '#38bdf8', shape: 'undead' },
+    { id: 'gargoyle',    name: "석상 날개 가고일",  zone: 2, body: '#64748b', dark: '#334155', eye: '#f59e0b', shape: 'demon' },
+    { id: 'lich',        name: "영혼 수확자 리치",  zone: 2, body: '#7e22ce', dark: '#3b0764', eye: '#22d3ee', shape: 'mage' },
+    { id: 'fallen',      name: "타락한 흑기사",     zone: 2, body: '#1e293b', dark: '#090d16', eye: '#f43f5e', shape: 'knight' },
+    // 화산 (10~13)
+    { id: 'flame',       name: "이그니스 화염 정령", zone: 3, body: '#f97316', dark: '#9a3412', eye: '#fef08a', shape: 'slime' },
+    { id: 'golem',       name: "용암 흑요석 골렘",  zone: 3, body: '#44403c', dark: '#1c1917', eye: '#fb923c', shape: 'golem' },
+    { id: 'minotaur',    name: "화염 도끼 미노타우로스", zone: 3, body: '#991b1b', dark: '#450a0a', eye: '#fde047', shape: 'beast' },
+    { id: 'cerberus',    name: "지옥의 파수꾼 케르베로스", zone: 3, body: '#dc2626', dark: '#450a0a', eye: '#fef08a', shape: 'dragon' },
+    // 공허 심연 (14~17)
+    { id: 'beholder',    name: "공허의 감시자 마수", zone: 4, body: '#6366f1', dark: '#1e1b4b', eye: '#f43f5e', shape: 'eye' },
+    { id: 'hydra',       name: "심연의 독액 히드라", zone: 4, body: '#0d9488', dark: '#115e59', eye: '#fde047', shape: 'dragon' },
+    { id: 'darkmage',    name: "심연 대마법사",     zone: 4, body: '#4c1d95', dark: '#1e1b4b', eye: '#e879f9', shape: 'mage' },
+    { id: 'behemoth',    name: "파멸의 베히모스",   zone: 4, body: '#312e81', dark: '#0f172a', eye: '#38bdf8', shape: 'golem' },
+    // 천공 신전 (18+)
+    { id: 'wyvern',      name: "천둥 날개 와이번",  zone: 5, body: '#0284c7', dark: '#0c4a6e', eye: '#fef08a', shape: 'dragon' },
+    { id: 'chronos',     name: "시간의 수호자 골렘", zone: 5, body: '#eab308', dark: '#713f12', eye: '#38bdf8', shape: 'knight' },
+    { id: 'abyssdragon', name: "암흑 제왕 드래곤",  zone: 5, body: '#be123c', dark: '#4c0519', eye: '#fde047', shape: 'dragon' },
+    { id: 'chaosgod',    name: "혼돈의 마신 오메가", zone: 5, body: '#9333ea', dark: '#1e1b4b', eye: '#f43f5e', shape: 'demon' },
+    // 특수 보물 고블린 (돌발 이벤트)
+    { id: 'treasure',    name: "황금 보물 고블린",  zone: -1, body: '#facc15', dark: '#a16207', eye: '#ffffff', shape: 'treasure' }
+];
+
+const MUTANT_TYPES = {
+    none:    { name: "",       badgeClass: "", auraClass: "", hpMult: 1.0, atkMult: 1.0, defMult: 1.0, goldMult: 1.0, extraShard: 0 },
+    golden:  { name: "황금변이", badgeClass: "bg-amber-500 text-slate-950", auraClass: "mutant-golden", hpMult: 1.35, atkMult: 1.1, defMult: 1.1, goldMult: 4.5, extraShard: 1 },
+    berserk: { name: "광폭화",   badgeClass: "bg-rose-600 text-white",      auraClass: "mutant-berserk", hpMult: 1.45, atkMult: 1.45, defMult: 1.0, goldMult: 2.2, extraShard: 1 },
+    armored: { name: "철갑변이", badgeClass: "bg-cyan-500 text-slate-950",  auraClass: "mutant-armored", hpMult: 1.6, atkMult: 1.15, defMult: 1.8, goldMult: 2.5, extraShard: 1 },
+    vampire: { name: "흡혈군주", badgeClass: "bg-purple-600 text-white",    auraClass: "mutant-vampire", hpMult: 1.5, atkMult: 1.3, defMult: 1.2, goldMult: 2.8, extraShard: 2 }
+};
+
+function getMonsterSvg(tpl, isBoss = false, mutantKey = 'none') {
+    const uid = `mn_${tpl.id}_${Math.random().toString(36).slice(2, 6)}`;
+    const mInfo = MUTANT_TYPES[mutantKey] || MUTANT_TYPES.none;
+    const scaleAttr = isBoss ? 'transform="scale(1.12) translate(-5, -5)"' : '';
+
+    // 변이 엘리트 왕관 파츠
+    const mutantCrown = mutantKey !== 'none'
+        ? `<polygon points="34,16 40,6 50,14 60,6 66,16" fill="#facc15" stroke="#fef08a" stroke-width="1.5"/>`
+        : '';
+
+    // 보스 전용 거대 악마 뿔 & 날개 실루엣
+    const bossParts = isBoss
+        ? `<path d="M22 36 Q6 16 14 6 Q24 18 30 28 Z" fill="#f43f5e" stroke="#fecdd3" stroke-width="1.4"/>
+           <path d="M78 36 Q94 16 86 6 Q76 18 70 28 Z" fill="#f43f5e" stroke="#fecdd3" stroke-width="1.4"/>`
+        : '';
+
+    let bodySvg = '';
+    switch (tpl.shape) {
+        case 'slime':
+            bodySvg = `
+                <path d="M18 74 Q14 34 50 26 Q86 34 82 74 Q78 86 50 86 Q22 86 18 74 Z" fill="url(#${uid})" stroke="#ffffff" stroke-width="1.6" opacity="0.95"/>
+                <ellipse cx="36" cy="42" rx="7" ry="4" transform="rotate(-25 36 42)" fill="#ffffff" opacity="0.45"/>
+                <circle cx="38" cy="58" r="5" fill="#090d16"/><circle cx="39" cy="57" r="2" fill="${tpl.eye}"/>
+                <circle cx="62" cy="58" r="5" fill="#090d16"/><circle cx="63" cy="57" r="2" fill="${tpl.eye}"/>
+                <path d="M43 69 Q50 75 57 69" fill="none" stroke="#090d16" stroke-width="2.5" stroke-linecap="round"/>`;
+            break;
+        case 'goblin':
+            bodySvg = `
+                <polygon points="24,44 6,34 20,56" fill="${tpl.body}" stroke="${tpl.dark}" stroke-width="1.5"/>
+                <polygon points="76,44 94,34 80,56" fill="${tpl.body}" stroke="${tpl.dark}" stroke-width="1.5"/>
+                <circle cx="50" cy="52" r="26" fill="url(#${uid})" stroke="${tpl.dark}" stroke-width="2"/>
+                <path d="M30 34 Q50 16 70 34 Z" fill="#991b1b" stroke="#fca5a5" stroke-width="1.2"/>
+                <polygon points="34,48 45,53 34,55" fill="${tpl.eye}"/>
+                <polygon points="66,48 55,53 66,55" fill="${tpl.eye}"/>
+                <path d="M38 66 L44 62 L50 66 L56 62 L62 66" fill="none" stroke="#ffffff" stroke-width="2"/>`;
+            break;
+        case 'beast':
+            bodySvg = `
+                <polygon points="26,36 18,14 38,26" fill="${tpl.dark}" stroke="${tpl.body}" stroke-width="1.5"/>
+                <polygon points="74,36 82,14 62,26" fill="${tpl.dark}" stroke="${tpl.body}" stroke-width="1.5"/>
+                <path d="M24 46 Q50 22 76 46 L72 80 Q50 88 28 80 Z" fill="url(#${uid})" stroke="#000" stroke-width="2"/>
+                <circle cx="38" cy="48" r="4.5" fill="${tpl.eye}"/>
+                <circle cx="62" cy="48" r="4.5" fill="${tpl.eye}"/>
+                <polygon points="32,74 26,60 38,68" fill="#fef08a"/>
+                <polygon points="68,74 74,60 62,68" fill="#fef08a"/>
+                <rect x="40" y="66" width="20" height="8" rx="3" fill="#090d16"/>`;
+            break;
+        case 'golem':
+            bodySvg = `
+                <polygon points="26,24 74,24 86,52 74,84 26,84 14,52" fill="url(#${uid})" stroke="#94a3b8" stroke-width="2"/>
+                <polyline points="26,38 44,48 36,64" fill="none" stroke="${tpl.eye}" stroke-width="2"/>
+                <polyline points="74,40 58,52 66,70" fill="none" stroke="${tpl.eye}" stroke-width="2"/>
+                <rect x="32" y="42" width="13" height="6" rx="2" fill="${tpl.eye}"/>
+                <rect x="55" y="42" width="13" height="6" rx="2" fill="${tpl.eye}"/>
+                <rect x="38" y="66" width="24" height="6" fill="#090d16"/>`;
+            break;
+        case 'undead':
+            bodySvg = `
+                <path d="M28 46 Q28 20 50 20 Q72 20 72 46 Q72 62 62 66 L62 82 L38 82 L38 66 Q28 62 28 46 Z" fill="url(#${uid})" stroke="#334155" stroke-width="2"/>
+                <circle cx="39" cy="46" r="6.5" fill="#090d16"/><circle cx="39" cy="46" r="2.8" fill="${tpl.eye}"/>
+                <circle cx="61" cy="46" r="6.5" fill="#090d16"/><circle cx="61" cy="46" r="2.8" fill="${tpl.eye}"/>
+                <polygon points="50,53 46,60 54,60" fill="#090d16"/>
+                <line x1="43" y1="72" x2="43" y2="82" stroke="#090d16" stroke-width="2"/>
+                <line x1="50" y1="72" x2="50" y2="82" stroke="#090d16" stroke-width="2"/>
+                <line x1="57" y1="72" x2="57" y2="82" stroke="#090d16" stroke-width="2"/>`;
+            break;
+        case 'mage':
+            bodySvg = `
+                <path d="M20 84 L32 28 Q50 12 68 28 L80 84 Z" fill="url(#${uid})" stroke="#c084fc" stroke-width="1.6"/>
+                <ellipse cx="50" cy="46" rx="16" ry="18" fill="#090d16"/>
+                <circle cx="43" cy="45" r="3.2" fill="${tpl.eye}"/>
+                <circle cx="57" cy="45" r="3.2" fill="${tpl.eye}"/>
+                <circle cx="80" cy="46" r="8" fill="${tpl.eye}" opacity="0.85"/>`;
+            break;
+        case 'knight':
+            bodySvg = `
+                <path d="M24 34 L50 18 L76 34 L72 78 L50 88 L28 78 Z" fill="url(#${uid})" stroke="#94a3b8" stroke-width="2"/>
+                <polygon points="32,44 48,48 32,52" fill="${tpl.eye}"/>
+                <polygon points="68,44 52,48 68,52" fill="${tpl.eye}"/>
+                <line x1="50" y1="22" x2="50" y2="82" stroke="#475569" stroke-width="2"/>`;
+            break;
+        case 'eye':
+            bodySvg = `
+                <path d="M20 72 L10 86 M35 76 L28 90 M65 76 L72 90 M80 72 L90 86" stroke="${tpl.dark}" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="50" cy="48" r="30" fill="url(#${uid})" stroke="#e0e7ff" stroke-width="2"/>
+                <circle cx="50" cy="48" r="15" fill="#ffffff"/>
+                <circle cx="50" cy="48" r="8" fill="${tpl.eye}"/>
+                <ellipse cx="50" cy="48" rx="2.5" ry="7" fill="#090d16"/>`;
+            break;
+        case 'dragon':
+            bodySvg = `
+                <path d="M16 54 L4 26 L28 38 Z" fill="${tpl.dark}" stroke="${tpl.body}" stroke-width="1.5"/>
+                <path d="M84 54 L96 26 L72 38 Z" fill="${tpl.dark}" stroke="${tpl.body}" stroke-width="1.5"/>
+                <polygon points="50,18 74,42 66,82 34,82 26,42" fill="url(#${uid})" stroke="#fde047" stroke-width="1.6"/>
+                <polygon points="35,44 46,49 36,52" fill="${tpl.eye}"/>
+                <polygon points="65,44 54,49 64,52" fill="${tpl.eye}"/>
+                <path d="M36 68 L43 62 L50 68 L57 62 L64 68" fill="none" stroke="#ffffff" stroke-width="2.2"/>`;
+            break;
+        case 'demon':
+            bodySvg = `
+                <path d="M26 32 Q12 14 24 8 Q32 18 36 28 Z" fill="#fef08a"/>
+                <path d="M74 32 Q88 14 76 8 Q68 18 64 28 Z" fill="#fef08a"/>
+                <path d="M24 44 Q50 20 76 44 L70 82 Q50 90 30 82 Z" fill="url(#${uid})" stroke="#f43f5e" stroke-width="2"/>
+                <circle cx="39" cy="48" r="4.5" fill="${tpl.eye}"/>
+                <circle cx="61" cy="48" r="4.5" fill="${tpl.eye}"/>
+                <polygon points="50,33 54,39 50,45 46,39" fill="#38bdf8"/>
+                <path d="M36 68 Q50 78 64 68" fill="none" stroke="#fecdd3" stroke-width="2.5"/>`;
+            break;
+        case 'treasure':
+            bodySvg = `
+                <rect x="22" y="34" width="56" height="46" rx="8" fill="url(#${uid})" stroke="#fef08a" stroke-width="2.5"/>
+                <path d="M22 48 L78 48" stroke="#78350f" stroke-width="4"/>
+                <rect x="44" y="42" width="12" height="14" rx="2" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5"/>
+                <circle cx="35" cy="26" r="6" fill="#facc15" stroke="#fef08a" stroke-width="1.5"/>
+                <circle cx="65" cy="26" r="6" fill="#facc15" stroke="#fef08a" stroke-width="1.5"/>`;
+            break;
+    }
+
+    return `
+    <svg viewBox="0 0 100 100" class="w-full h-full ${mInfo.auraClass} overflow-visible">
+        <defs>
+            <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${tpl.body}"/>
+                <stop offset="100%" stop-color="${tpl.dark}"/>
+            </linearGradient>
+        </defs>
+        <g ${scaleAttr}>
+            ${bossParts}
+            ${bodySvg}
+            ${mutantCrown}
+        </g>
+    </svg>`;
+}
+
+/**
+ * ============================================================================
+ * 3. 밸런스 데이터 (15종 검, 접두사, 4대 영혼석, 전술 카드, 유물, 업적)
+ * ============================================================================
+ */
+const SWORD_DATA = [
+    { tier: 1,  name: "녹슨 단검",           baseAtk: 16,         baseHp: 95,         sellBase: 18 },
+    { tier: 2,  name: "청동 글라디우스",     baseAtk: 44,         baseHp: 250,        sellBase: 55 },
+    { tier: 3,  name: "강철 롱소드",         baseAtk: 120,        baseHp: 660,        sellBase: 170 },
+    { tier: 4,  name: "기사단 클레이모어",   baseAtk: 330,        baseHp: 1750,       sellBase: 520 },
+    { tier: 5,  name: "화염의 플랑베르주",   baseAtk: 900,        baseHp: 4600,       sellBase: 1600 },
+    { tier: 6,  name: "빙결의 서리한",       baseAtk: 2450,       baseHp: 12200,      sellBase: 4800 },
+    { tier: 7,  name: "뇌전의 카타나",       baseAtk: 6700,       baseHp: 32500,      sellBase: 14500 },
+    { tier: 8,  name: "용살자의 대검",       baseAtk: 18500,      baseHp: 86000,      sellBase: 44000 },
+    { tier: 9,  name: "성광의 엑스칼리버",   baseAtk: 51000,      baseHp: 235000,     sellBase: 135000 },
+    { tier: 10, name: "심연의 마검 아포피스", baseAtk: 142000,     baseHp: 630000,     sellBase: 420000 },
+    { tier: 11, name: "천공의 폭풍검",       baseAtk: 400000,     baseHp: 1720000,    sellBase: 1300000 },
+    { tier: 12, name: "태양신의 황금검",     baseAtk: 1150000,    baseHp: 4750000,    sellBase: 4100000 },
+    { tier: 13, name: "은하수 성운검",       baseAtk: 3300000,    baseHp: 13200000,   sellBase: 13000000 },
+    { tier: 14, name: "시공의 단절검",       baseAtk: 9600000,    baseHp: 36500000,   sellBase: 42000000 },
+    { tier: 15, name: "창세의 신검 오메가",   baseAtk: 29000000,   baseHp: 108000000,  sellBase: 140000000 }
+];
+
+const PREFIX_DATA = {
+    normal:    { name: "일반",   color: "text-slate-300",  atkMult: 1.0,  hpMult: 1.0,  critBonus: 0,  penBonus: 0,    lifesteal: 0,    desc: "기본 제련 상태" },
+    sharp:     { name: "예리한", color: "text-amber-300",  atkMult: 1.22, hpMult: 1.0,  critBonus: 12, penBonus: 0.25, lifesteal: 0,    desc: "공격력 +22%, 방어관통 25%, 치명타 +12%" },
+    sturdy:    { name: "견고한", color: "text-emerald-300",atkMult: 1.04, hpMult: 1.40, critBonus: 0,  penBonus: 0,    lifesteal: 0,    desc: "검 생명력(HP) +40% 증가" },
+    vampiric:  { name: "흡혈의", color: "text-rose-400",   atkMult: 1.15, hpMult: 1.15, critBonus: 5,  penBonus: 0.10, lifesteal: 0.05, desc: "타격 시 피해량의 5%만큼 HP 흡수" },
+    legendary: { name: "전설의", color: "text-purple-300", atkMult: 1.42, hpMult: 1.42, critBonus: 18, penBonus: 0.35, lifesteal: 0.04, desc: "공격/HP +42%, 방어관통 35%, 치명타 +18%" },
+    mythic:    { name: "신화급", color: "text-cyan-300",   atkMult: 1.75, hpMult: 1.75, critBonus: 25, penBonus: 0.50, lifesteal: 0.06, desc: "모든 능력치 1.75배, 방어관통 50%, 흡혈 6%" }
+};
+
+const SOUL_STONE_CONFIGS = [
+    { id: 'ruby',     name: "태양의 루비 각인",     icon: "🔴", max: 15, baseCost: 2, desc: "모든 검 공격력 +12%, 치명타 +2%",    val: lv => `공격 +${lv * 12}%, 치명 +${lv * 2}%` },
+    { id: 'sapphire', name: "심해의 사파이어 각인", icon: "🔵", max: 15, baseCost: 2, desc: "방어관통 +4%, 스킬 쿨타임 -2%",      val: lv => `관통 +${lv * 4}%, 쿨감 -${lv * 2}%` },
+    { id: 'emerald',  name: "생명의 에메랄드 각인", icon: "🟢", max: 15, baseCost: 2, desc: "최대 HP +15%, 타격 흡혈 +0.6%",      val: lv => `HP +${lv * 15}%, 흡혈 +${(lv * 0.6).toFixed(1)}%` },
+    { id: 'topaz',    name: "풍요의 토파즈 각인",   icon: "🟡", max: 15, baseCost: 2, desc: "골드 획득 +18%, 변이 몬스터 출현 +2%", val: lv => `골드 +${lv * 18}%, 변이 +${lv * 2}%` }
+];
+
+const TACTICAL_CARDS = [
+    { id: 'pen',     name: "갑옷 부수기",   icon: "🗡️", desc: "몬스터 방어력(DEF) 무시 +15%",       perStack: st => `방어 관통 +${st * 15}%` },
+    { id: 'atk',     name: "전투 광기",     icon: "⚔️", desc: "모든 최종 공격력 +20% 증폭",         perStack: st => `공격력 +${st * 20}%` },
+    { id: 'hp',      name: "거인의 심장",   icon: "❤️", desc: "플레이어 최대 생명력 +25% 증폭",     perStack: st => `최대 HP +${st * 25}%` },
+    { id: 'leech',   name: "핏빛 갈증",     icon: "🩸", desc: "모든 공격 시 피해량의 2% HP 흡수",    perStack: st => `흡혈 +${st * 2}%` },
+    { id: 'thorns',  name: "가시 갑옷",     icon: "🌵", desc: "피격 시 입은 피해의 60%를 적에게 반사", perStack: st => `피해 반사 ${st * 60}%` },
+    { id: 'greed',   name: "황금의 축복",   icon: "💰", desc: "몬스터 처치 골드 획득량 +25%",       perStack: st => `골드 +${st * 25}%` }
+];
+
+const ACHIEVEMENTS = [
+    { id: 'plus5',   name: "숙련된 망치질",   desc: "+5강 검 달성",            bonusText: "강화 성공률 +3%", check: s => s.maxPlusEver >= 5 },
+    { id: 'plus10',  name: "전설의 장인",     desc: "+10강 검 달성",           bonusText: "모든 공격력 +25%", check: s => s.maxPlusEver >= 10 },
+    { id: 'tier6',   name: "원소 제련가",     desc: "6단계 검 이상 획득",      bonusText: "최대 HP +25%", check: s => Math.max(...s.unlockedTiers) >= 6 },
+    { id: 'tier10',  name: "심연의 지배자",   desc: "10단계 검 이상 획득",     bonusText: "모든 공격력 +40%", check: s => Math.max(...s.unlockedTiers) >= 10 },
+    { id: 'kills50', name: "괴물 사냥꾼",     desc: "누적 몬스터 50마리 처치", bonusText: "골드 획득량 +25%", check: s => s.totalKills >= 50 },
+    { id: 'stage10', name: "시련 돌파자",     desc: "스테이지 10 도달",        bonusText: "치명타 피해 +35%", check: s => s.maxStageEver >= 10 }
+];
+
+const RELIC_CONFIGS = [
+    { id: 'phoenix', name: "불사조의 깃털",     icon: "🪶", desc: "전투 중 초당 최대 HP 재생량 증가", perLv: "+1.0%/초" },
+    { id: 'chalice', name: "피의 성배",         icon: "🍷", desc: "몬스터 처치 시 최대 HP 비례 회복", perLv: "+5% 회복" },
+    { id: 'hammer',  name: "헤파이스토스 망치", icon: "🔨", desc: "모든 검의 공격력 및 강화 확률 증가", perLv: "공격+14%, 확률+1%" },
+    { id: 'aegis',   name: "아이기스의 방패",   icon: "🛡️", desc: "플레이어 최대 HP 및 받는 피해 감소", perLv: "HP+20%, 피해감소+2%" },
+    { id: 'crown',   name: "미다스의 왕관",     icon: "👑", desc: "몬스터 처치 골드 및 검 판매가 증가", perLv: "+25% 골드" }
+];
+
+/**
+ * ============================================================================
+ * 4. 게임 상태 (State)
+ * ============================================================================
+ */
+const DEFAULT_STATE = {
+    gold: 140,
+    gems: 35,
+    shards: 4,
+    stones: 0,
+    stage: 1,
+    stageKills: 0,
+    totalKills: 0,
+    maxPlusEver: 0,
+    maxStageEver: 1,
+    enhanceStreak: 0,
+    playerHp: 135,
+    isResting: false,
+    isDefeated: false,
+    autoRetreat: true,
+    autoSkill: false,
+    inventory: Array(12).fill(null),
+    selectedSlot: null,
+    equippedSlot: 0,
+    unlockedTiers: [1],
+    upgrades: {
+        startTier: 0,
+        baseHpLv: 0,
+        baseAtkLv: 0,
+        regenLv: 0,
+        enhanceRate: 0,
+        critChance: 0
+    },
+    soulStones: { ruby: 0, sapphire: 0, emerald: 0, topaz: 0 },
+    skillLevels: [1, 1, 1],
+    relics: { phoenix: 0, chalice: 0, hammer: 0, aegis: 0, crown: 0 },
+    tacticalBuffs: { pen: 0, atk: 0, hp: 0, leech: 0, thorns: 0, greed: 0 },
+    prestigeUpgrades: { atkMult: 0, hpMult: 0, goldMult: 0 },
+    quest: { type: 'kill', progress: 0, target: 10, rewardGems: 5 },
+    dungeonTickets: { gold: 3, shard: 3, lastResetDay: new Date().toDateString() },
+    soundEnabled: true,
+    lastSaveTime: Date.now()
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+let monster = {
+    tpl: MONSTER_ROSTER[0],
+    name: "에메랄드 슬라임",
+    mutant: 'none',
+    maxHp: 110,
+    hp: 110,
+    ghostHp: 110,
+    def: 2,
+    atk: 13,
+    atkGauge: 0,
+    isBoss: false,
+    isTreasureGoblin: false,
+    isChargingHeavy: false,
+    dungeonType: null,
+    timer: 22.0,
+    isDying: false
+};
+
+let skillCooldowns = [0, 0, 0];
+let berserkTimeLeft = 0;
+let feverGauge = 0;
+let feverTimeLeft = 0;
+let comboCount = 0;
+let comboResetTimer = 0;
+let isEnhancingAnim = false;
+let isGamblingAnim = false;
+let currentBetRatio = 0.1;
+let dragSourceIdx = null;
+let confirmResetFlag = false;
+let lastMonsterVisualSig = "";
+
+/**
+ * ============================================================================
+ * 5. 파티클 캔버스 엔진 & Web Audio 신디사이저
+ * ============================================================================
+ */
+const fxCanvas = document.getElementById('fxCanvas');
+const fxCtx = fxCanvas.getContext('2d');
+let particles = [];
+
+function resizeFxCanvas() {
+    fxCanvas.width = window.innerWidth;
+    fxCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeFxCanvas);
+resizeFxCanvas();
+
+function spawnParticles(x, y, colors, count = 24, speed = 7) {
+    if (particles.length > 180) particles.splice(0, particles.length - 120);
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const vel = (0.3 + Math.random() * 0.7) * speed;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * vel,
+            vy: Math.sin(angle) * vel - 2,
+            size: 3 + Math.random() * 4.5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            life: 1.0,
+            decay: 0.022 + Math.random() * 0.025
+        });
+    }
+}
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function playSound(type) {
+    if (!state.soundEnabled) return;
+    try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'hit') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(210 + Math.random() * 60, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+            osc.start(now); osc.stop(now + 0.07);
+        } else if (type === 'crit') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(420, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.14);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.start(now); osc.stop(now + 0.14);
+        } else if (type === 'anvil') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1150, now);
+            osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+            gain.gain.setValueAtTime(0.22, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.start(now); osc.stop(now + 0.12);
+        } else if (type === 'enhanceSuccess' || type === 'merge') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.06);
+            osc.frequency.setValueAtTime(783.99, now + 0.12);
+            osc.frequency.setValueAtTime(1046.5, now + 0.18);
+            gain.gain.setValueAtTime(0.24, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        } else if (type === 'enhanceFail') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.linearRampToValueAtTime(55, now + 0.28);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc.start(now); osc.stop(now + 0.28);
+        } else if (type === 'hurt') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.linearRampToValueAtTime(50, now + 0.12);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.start(now); osc.stop(now + 0.12);
+        } else if (type === 'skill') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(280, now);
+            osc.frequency.exponentialRampToValueAtTime(980, now + 0.22);
+            gain.gain.setValueAtTime(0.22, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.start(now); osc.stop(now + 0.22);
+        }
+    } catch (e) {}
+}
+
+function toggleSound() {
+    state.soundEnabled = !state.soundEnabled;
+    document.getElementById('soundToggleBtn').textContent = state.soundEnabled ? '🔊 ON' : '🔇 OFF';
+    saveGame();
+}
+
+/**
+ * ============================================================================
+ * 6. 스탯 계산 엔진 (영혼석 각인 · 감쇠형 강화 · 방어력 반영)
+ * ============================================================================
+ */
+function formatNumber(num) {
+    if (num < 1000) return Math.floor(num).toLocaleString();
+    const units = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp"];
+    const tier = Math.floor(Math.log10(num) / 3);
+    if (tier >= units.length) return num.toExponential(2);
+    const scale = Math.pow(10, tier * 3);
+    const scaled = num / scale;
+    return scaled.toFixed(scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2) + units[tier];
+}
+
+function hasAchievement(id) {
+    const ach = ACHIEVEMENTS.find(a => a.id === id);
+    return ach ? ach.check(state) : false;
+}
+
+function rollRandomPrefix(bonusLuck = 0) {
+    const r = Math.random() * 100 - bonusLuck;
+    if (r < 1.5) return 'mythic';
+    if (r < 6.5) return 'legendary';
+    if (r < 19)  return 'vampiric';
+    if (r < 37)  return 'sharp';
+    if (r < 55)  return 'sturdy';
+    return 'normal';
+}
+
+function getSwordStats(sword) {
+    if (!sword) return { atk: 0, hp: 0, sellPrice: 0, salvageShards: 0, enhanceCost: 0, prefixInfo: PREFIX_DATA.normal };
+    const base = SWORD_DATA[sword.tier - 1];
+    const pInfo = PREFIX_DATA[sword.prefix || 'normal'];
+
+    const atkPlusMult = 1 + sword.plus * 0.16 + Math.pow(sword.plus, 1.35) * 0.025;
+    const hpPlusMult = 1 + sword.plus * 0.18 + Math.pow(sword.plus, 1.35) * 0.03;
+
+    const rubyMult = 1 + (state.soulStones.ruby || 0) * 0.12;
+    const relicAtkMult = 1 + state.relics.hammer * 0.14;
+    const prestigeAtkMult = 1 + state.prestigeUpgrades.atkMult * 0.25;
+    const tacticalAtkMult = 1 + (state.tacticalBuffs.atk || 0) * 0.20;
+    const achAtkMult = (hasAchievement('plus10') ? 1.25 : 1.0) * (hasAchievement('tier10') ? 1.40 : 1.0);
+
+    const atk = Math.floor(base.baseAtk * atkPlusMult * pInfo.atkMult * rubyMult * relicAtkMult * prestigeAtkMult * tacticalAtkMult * achAtkMult);
+    const hp = Math.floor(base.baseHp * hpPlusMult * pInfo.hpMult);
+
+    const crownBonus = (1 + state.relics.crown * 0.25) * (hasAchievement('kills50') ? 1.25 : 1.0);
+    const sellPrice = Math.floor(base.sellBase * (1 + sword.plus * 0.35) * crownBonus);
+    const salvageShards = Math.max(1, Math.floor(sword.tier * 0.6 + sword.plus * 0.5));
+    const enhanceCost = Math.max(12, Math.floor(base.sellBase * 0.65 * Math.pow(1.32, sword.plus)));
+
+    return { atk, hp, sellPrice, salvageShards, enhanceCost, prefixInfo: pInfo };
+}
+
+function getPlayerMaxHp() {
+    const baseHp = 135 + state.upgrades.baseHpLv * 110;
+    const eqSword = state.equippedSlot !== -1 ? state.inventory[state.equippedSlot] : null;
+    const swordHp = eqSword ? getSwordStats(eqSword).hp : 0;
+
+    const emeraldMult = 1 + (state.soulStones.emerald || 0) * 0.15;
+    const aegisMult = 1 + state.relics.aegis * 0.20;
+    const prestigeHpMult = 1 + state.prestigeUpgrades.hpMult * 0.25;
+    const tacticalHpMult = 1 + (state.tacticalBuffs.hp || 0) * 0.25;
+    const achHpMult = hasAchievement('tier6') ? 1.25 : 1.0;
+
+    return Math.floor((baseHp + swordHp) * emeraldMult * aegisMult * prestigeHpMult * tacticalHpMult * achHpMult);
+}
+
+function getPlayerTotalAtk() {
+    const baseAtk = 6 + state.upgrades.baseAtkLv * 7;
+    const eqSword = state.equippedSlot !== -1 ? state.inventory[state.equippedSlot] : null;
+    const swordAtk = eqSword ? getSwordStats(eqSword).atk : 0;
+    const berserkMult = berserkTimeLeft > 0 ? 1.75 : 1.0;
+    const comboMult = comboCount >= 100 ? 1.25 : 1.0;
+
+    return Math.floor((baseAtk + swordAtk) * berserkMult * comboMult);
+}
+
+function getEnhanceRates(sword) {
+    if (!sword) return { success: 0, destroy: 0, penaltyText: "-", streakBonus: 0 };
+    const streakBonus = Math.min(15, state.enhanceStreak * 3);
+    const baseRate = 94 - (sword.tier * 2.0) - (sword.plus * 5.2);
+    const bonus = state.upgrades.enhanceRate * 1.5 + state.relics.hammer * 1.0 + (hasAchievement('plus5') ? 3 : 0) + streakBonus;
+    const success = Math.min(98, Math.max(18, Math.round(baseRate + bonus)));
+
+    let destroy = 0;
+    let penaltyText = "유지";
+    if (sword.plus >= 5) {
+        destroy = Math.min(35, (sword.plus - 4) * 4);
+        penaltyText = "단계 하락";
+    } else if (sword.plus >= 3) {
+        penaltyText = "단계 하락";
+    }
+    return { success, destroy, penaltyText, streakBonus };
+}
+
+function getSummonTier() { return Math.min(SWORD_DATA.length, 1 + state.upgrades.startTier); }
+function getSummonCost() { return Math.floor(20 * Math.pow(2.45, getSummonTier() - 1)); }
+function getPotionCost() { return Math.max(35, Math.floor(30 * Math.pow(1.38, state.stage - 1))); }
+
+/**
+ * ============================================================================
+ * 7. 대장간 핵심 액션 (제련, 합성, 모루 강화, 리롤, 판매/분해)
+ * ============================================================================
+ */
+function summonSword() {
+    const emptyIdx = state.inventory.findIndex(s => s === null);
+    if (emptyIdx === -1) {
+        showToast("인벤토리가 가득 찼습니다! 합성하거나 판매/분해하세요.", "error");
+        return;
+    }
+    const cost = getSummonCost();
+    if (state.gold < cost) {
+        showToast("골드가 부족합니다!", "error");
+        return;
+    }
+
+    state.gold -= cost;
+    const tier = getSummonTier();
+    const prefix = rollRandomPrefix();
+    state.inventory[emptyIdx] = { tier, plus: 0, prefix };
+    unlockCodexTier(tier);
+    playSound('anvil');
+
+    if (prefix !== 'normal') {
+        showToast(`✨ [${PREFIX_DATA[prefix].name}] ${SWORD_DATA[tier - 1].name} 탄생!`, "success");
+    }
+
+    if (state.selectedSlot === null) state.selectedSlot = emptyIdx;
+    autoEquipCheck();
+    updateAllUI();
+}
+
+function handleSlotClick(idx) {
+    if (isEnhancingAnim) return;
+    const clicked = state.inventory[idx];
+
+    if (state.selectedSlot !== null && state.selectedSlot !== idx) {
+        const src = state.inventory[state.selectedSlot];
+        if (src && clicked && src.tier === clicked.tier) {
+            mergeSwords(state.selectedSlot, idx);
+            return;
+        }
+    }
+
+    if (clicked) {
+        state.selectedSlot = idx;
+    } else if (state.selectedSlot !== null && state.inventory[state.selectedSlot]) {
+        state.inventory[idx] = state.inventory[state.selectedSlot];
+        state.inventory[state.selectedSlot] = null;
+        if (state.equippedSlot === state.selectedSlot) state.equippedSlot = idx;
+        state.selectedSlot = idx;
+    }
+    updateAllUI();
+}
+
+function mergeSwords(fromIdx, toIdx) {
+    const s1 = state.inventory[fromIdx];
+    const s2 = state.inventory[toIdx];
+    if (!s1 || !s2 || fromIdx === toIdx || s1.tier !== s2.tier) return;
+    if (s1.tier >= SWORD_DATA.length) {
+        showToast("이미 최고 단계(15단계) 신검입니다!", "info");
+        return;
+    }
+
+    const nextTier = s1.tier + 1;
+    const inheritedPlus = Math.floor(Math.max(s1.plus, s2.plus) * 0.5);
+    const bestPrefix = (s1.prefix === 'mythic' || s2.prefix === 'mythic') ? 'mythic'
+        : (s1.prefix === 'legendary' || s2.prefix === 'legendary') ? 'legendary'
+        : rollRandomPrefix(4);
+
+    state.inventory[toIdx] = { tier: nextTier, plus: inheritedPlus, prefix: bestPrefix };
+    state.inventory[fromIdx] = null;
+    state.selectedSlot = toIdx;
+
+    advanceQuest('merge', 1);
+    unlockCodexTier(nextTier);
+    playSound('merge');
+    triggerFlash('rgba(52, 211, 153, 0.3)');
+
+    const rect = document.getElementById('inventoryGrid').getBoundingClientRect();
+    spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, ['#34d399', '#fbbf24', '#38bdf8'], 28, 8);
+    showToast(`✨ 융합 합성 성공! [${PREFIX_DATA[bestPrefix].name} ${SWORD_DATA[nextTier - 1].name}]`, "success");
+
+    autoEquipCheck();
+    updateAllUI();
+}
+
+function autoMergeAll() {
+    if (isEnhancingAnim) return;
+    let count = 0;
+    let found = true;
+    while (found) {
+        found = false;
+        for (let i = 0; i < state.inventory.length; i++) {
+            const s1 = state.inventory[i];
+            if (!s1 || s1.tier >= SWORD_DATA.length) continue;
+            for (let j = i + 1; j < state.inventory.length; j++) {
+                const s2 = state.inventory[j];
+                if (s2 && s1.tier === s2.tier) {
+                    const nextTier = s1.tier + 1;
+                    const inheritedPlus = Math.floor(Math.max(s1.plus, s2.plus) * 0.5);
+                    const bestPrefix = (s1.prefix === 'mythic' || s2.prefix === 'mythic') ? 'mythic'
+                        : (s1.prefix === 'legendary' || s2.prefix === 'legendary') ? 'legendary'
+                        : rollRandomPrefix(4);
+                    state.inventory[i] = { tier: nextTier, plus: inheritedPlus, prefix: bestPrefix };
+                    state.inventory[j] = null;
+                    unlockCodexTier(nextTier);
+                    count++;
+                    found = true;
+                    break;
+                }
+            }
+            if (found) break;
+        }
+    }
+
+    if (count > 0) {
+        advanceQuest('merge', count);
+        playSound('merge');
+        const rect = document.getElementById('inventoryGrid').getBoundingClientRect();
+        spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, ['#34d399', '#a855f7', '#fbbf24'], 34, 9);
+        showToast(`✨ 총 ${count}회 일괄 융합 합성 완료!`, "success");
+        if (state.selectedSlot !== null && !state.inventory[state.selectedSlot]) {
+            const firstIdx = state.inventory.findIndex(s => s !== null);
+            state.selectedSlot = firstIdx === -1 ? null : firstIdx;
+        }
+        autoEquipCheck();
+        updateAllUI();
+    } else {
+        showToast("합성 가능한 동일 단계 검이 없습니다.", "info");
+    }
+}
+
+function enhanceSelectedSword() {
+    if (isEnhancingAnim || state.selectedSlot === null) return;
+    const sword = state.inventory[state.selectedSlot];
+    if (!sword) return;
+
+    const { enhanceCost } = getSwordStats(sword);
+    if (state.gold < enhanceCost) {
+        showToast("강화 골드가 부족합니다!", "error");
+        return;
+    }
+
+    const useProtect = document.getElementById('useProtectShard').checked;
+    const { success, destroy } = getEnhanceRates(sword);
+
+    if (useProtect && destroy > 0) {
+        if (state.shards < 1) {
+            showToast("파괴 방지 파편 🧩이 부족합니다!", "error");
+            return;
+        }
+        state.shards -= 1;
+    }
+
+    state.gold -= enhanceCost;
+    advanceQuest('enhance', 1);
+    updateAllUI();
+
+    isEnhancingAnim = true;
+    const hammer = document.getElementById('anvilHammer');
+    const chargeWrap = document.getElementById('anvilChargeWrap');
+    const chargeBar = document.getElementById('anvilChargeBar');
+    const anvilStage = document.getElementById('anvilStage');
+
+    hammer.classList.remove('hidden');
+    chargeWrap.classList.remove('hidden');
+    chargeBar.style.transition = 'none';
+    chargeBar.style.width = '0%';
+
+    playSound('anvil');
+    hammer.classList.remove('hammer-anim'); void hammer.offsetWidth; hammer.classList.add('hammer-anim');
+
+    setTimeout(() => {
+        chargeBar.style.transition = 'width 0.36s linear';
+        chargeBar.style.width = '100%';
+    }, 15);
+
+    setTimeout(() => {
+        playSound('anvil');
+        hammer.classList.remove('hammer-anim'); void hammer.offsetWidth; hammer.classList.add('hammer-anim');
+    }, 190);
+
+    setTimeout(() => {
+        isEnhancingAnim = false;
+        hammer.classList.add('hidden');
+        chargeWrap.classList.add('hidden');
+
+        const rect = anvilStage.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        if (Math.random() * 100 < success) {
+            sword.plus += 1;
+            state.enhanceStreak += 1;
+            if (sword.plus > state.maxPlusEver) state.maxPlusEver = sword.plus;
+            playSound('enhanceSuccess');
+            triggerFlash('rgba(251, 191, 36, 0.35)');
+            spawnParticles(cx, cy, ['#fbbf24', '#fef08a', '#f97316', '#ffffff'], 32, 9);
+            showToast(`🔨 강화 성공! (${state.enhanceStreak}연승) +${sword.plus} ${SWORD_DATA[sword.tier - 1].name}`, "success");
+        } else {
+            state.enhanceStreak = 0;
+            triggerScreenShake();
+            if (destroy > 0 && Math.random() * 100 < destroy && !useProtect) {
+                const gainedShards = Math.max(1, Math.floor(sword.tier * 0.7));
+                state.shards += gainedShards;
+                state.inventory[state.selectedSlot] = null;
+                state.selectedSlot = null;
+                playSound('enhanceFail');
+                triggerFlash('rgba(244, 63, 94, 0.45)');
+                spawnParticles(cx, cy, ['#f43f5e', '#94a3b8', '#475569'], 30, 8);
+                showToast(`💥 검이 산산조각 났습니다! (파편 +${gainedShards} 🧩)`, "error");
+            } else if (sword.plus >= 3) {
+                sword.plus -= 1;
+                playSound('enhanceFail');
+                spawnParticles(cx, cy, ['#f43f5e', '#fb923c'], 16, 5);
+                showToast(`📉 강화 실패... +${sword.plus}강으로 하락했습니다.`, "error");
+            } else {
+                playSound('enhanceFail');
+                showToast(`🛡️ 강화 실패! 등급은 유지되었습니다.`, "info");
+            }
+        }
+
+        autoEquipCheck();
+        updateAllUI();
+    }, 400);
+}
+
+function rerollSwordPrefix() {
+    if (isEnhancingAnim || state.selectedSlot === null) return;
+    const sword = state.inventory[state.selectedSlot];
+    if (!sword) return;
+    if (state.shards < 1) {
+        showToast("옵션 재설정에는 검의 파편 🧩 1개가 필요합니다!", "error");
+        return;
+    }
+    state.shards -= 1;
+    const oldPrefix = sword.prefix;
+    let nextPrefix = rollRandomPrefix(5);
+    if (nextPrefix === oldPrefix && nextPrefix === 'normal') nextPrefix = 'sharp';
+    sword.prefix = nextPrefix;
+
+    playSound('merge');
+    const rect = document.getElementById('anvilStage').getBoundingClientRect();
+    spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, ['#38bdf8', '#c084fc', '#fbbf24'], 20, 6);
+    showToast(`🎲 옵션 제련 완료: [${PREFIX_DATA[nextPrefix].name}] 등급 부여!`, "success");
+    autoEquipCheck();
+    updateAllUI();
+}
+
+function sellSelectedSword() {
+    if (isEnhancingAnim || state.selectedSlot === null) return;
+    const sword = state.inventory[state.selectedSlot];
+    if (!sword) return;
+
+    const { sellPrice } = getSwordStats(sword);
+    state.gold += sellPrice;
+    state.inventory[state.selectedSlot] = null;
+    state.selectedSlot = null;
+
+    playSound('anvil');
+    showToast(`💰 검 판매 완료 (+${formatNumber(sellPrice)} G)`, "success");
+    autoEquipCheck();
+    updateAllUI();
+}
+
+function salvageSelectedSword() {
+    if (isEnhancingAnim || state.selectedSlot === null) return;
+    const sword = state.inventory[state.selectedSlot];
+    if (!sword) return;
+
+    const { salvageShards } = getSwordStats(sword);
+    state.shards += salvageShards;
+    state.inventory[state.selectedSlot] = null;
+    state.selectedSlot = null;
+
+    playSound('anvil');
+    showToast(`🧩 검 분해 완료! 검의 파편 +${salvageShards}개 획득!`, "info");
+    autoEquipCheck();
+    updateAllUI();
+}
+
+function autoEquipCheck() {
+    const prevMaxHp = getPlayerMaxHp();
+    const hpRatio = prevMaxHp > 0 ? Math.min(1, state.playerHp / prevMaxHp) : 1;
+
+    let bestIdx = -1;
+    let bestScore = -1;
+    state.inventory.forEach((s, idx) => {
+        if (s) {
+            const st = getSwordStats(s);
+            const score = st.atk + st.hp * 0.25;
+            if (score > bestScore) {
+                bestScore = score;
+                bestIdx = idx;
+            }
+        }
+    });
+    state.equippedSlot = bestIdx;
+
+    const newMaxHp = getPlayerMaxHp();
+    state.playerHp = Math.min(newMaxHp, Math.max(1, Math.round(newMaxHp * hpRatio)));
+}
+
+function equipBestSword() {
+    autoEquipCheck();
+    if (state.equippedSlot !== -1) {
+        state.selectedSlot = state.equippedSlot;
+        showToast("👑 가장 강력한 검을 장착했습니다!", "info");
+        updateAllUI();
+    }
+}
+
+function unlockCodexTier(tier) {
+    if (!state.unlockedTiers.includes(tier)) {
+        state.unlockedTiers.push(tier);
+        const reward = tier * 8;
+        state.gems += reward;
+        showToast(`📖 신규 검 도감 등록! 다이아 +${reward} 💎`, "success");
+    }
+}
+
+/**
+ * ============================================================================
+ * 8. 20종+ 몬스터 스폰, 변이(엘리트) 추첨, 돌발 보물 고블린 & 전투 시스템
+ * ============================================================================
+ */
+function pickMonsterForCurrentStage() {
+    const zIdx = ZONE_THEMES.findIndex(z => z === getCurrentZoneTheme(state.stage));
+    // 현재 지역 + 인접 지역 몬스터 풀에서 무작위 선택해 매번 새로운 몬스터 등장
+    const candidates = MONSTER_ROSTER.filter(m => m.zone >= 0 && Math.abs(m.zone - zIdx) <= 1);
+    let pick = candidates[Math.floor(Math.random() * candidates.length)] || MONSTER_ROSTER[0];
+    // 직전 몬스터와 겹치지 않도록 재추첨
+    if (candidates.length > 1 && monster.tpl && pick.id === monster.tpl.id) {
+        const others = candidates.filter(c => c.id !== monster.tpl.id);
+        pick = others[Math.floor(Math.random() * others.length)];
+    }
+    return pick;
+}
+
+function rollMutantType() {
+    const topazBonus = (state.soulStones.topaz || 0) * 2;
+    const r = Math.random() * 100 - topazBonus;
+    if (r < 5)  return 'golden';
+    if (r < 11) return 'berserk';
+    if (r < 17) return 'armored';
+    if (r < 22) return 'vampire';
+    return 'none';
+}
+
+function spawnMonster(isBoss = false, dungeonType = null) {
+    const baseHp = Math.floor(110 * Math.pow(1.62, state.stage - 1));
+    const baseAtk = Math.floor(14 * Math.pow(1.50, state.stage - 1));
+    const baseDef = Math.floor(2 + Math.pow(state.stage - 1, 1.35) * 4.5);
+
+    const mVis = document.getElementById('monsterVisual');
+    if (mVis) mVis.classList.remove('m-overkill', 'm-hit');
+    lastMonsterVisualSig = "";
+
+    // 일반 사냥 중 8% 확률로 돌발 황금 보물 고블린 출현!
+    if (!isBoss && !dungeonType && Math.random() < 0.08) {
+        const tTpl = MONSTER_ROSTER.find(m => m.id === 'treasure');
+        monster = {
+            tpl: tTpl,
+            name: "💰 황금 보물 고블린",
+            mutant: 'golden',
+            maxHp: Math.floor(baseHp * 2.2),
+            hp: Math.floor(baseHp * 2.2),
+            ghostHp: Math.floor(baseHp * 2.2),
+            def: Math.floor(baseDef * 0.5),
+            atk: Math.floor(baseAtk * 0.4),
+            atkGauge: 0,
+            isBoss: false,
+            isTreasureGoblin: true,
+            isChargingHeavy: false,
+            dungeonType: null,
+            timer: 10.0,
+            isDying: false
+        };
+        showToast("💰 돌발! 황금 보물 고블린 출현! 10초 안에 처치하세요!", "success");
+        updateBattleUI();
+        return;
+    }
+
+    if (dungeonType === 'gold') {
+        const dTpl = MONSTER_ROSTER.find(m => m.id === 'goblin');
+        monster = {
+            tpl: dTpl, name: "💰 황금 고블린 킹", mutant: 'golden',
+            maxHp: baseHp * 8, hp: baseHp * 8, ghostHp: baseHp * 8, def: Math.floor(baseDef * 1.2), atk: Math.floor(baseAtk * 1.45),
+            atkGauge: 0, isBoss: true, isTreasureGoblin: false, isChargingHeavy: false, dungeonType: 'gold', timer: 25.0, isDying: false
+        };
+    } else if (dungeonType === 'shard') {
+        const sTpl = MONSTER_ROSTER.find(m => m.id === 'golem');
+        monster = {
+            tpl: sTpl, name: "🧩 파편의 골렘 수호자", mutant: 'armored',
+            maxHp: baseHp * 9, hp: baseHp * 9, ghostHp: baseHp * 9, def: Math.floor(baseDef * 1.4), atk: Math.floor(baseAtk * 1.65),
+            atkGauge: 0, isBoss: true, isTreasureGoblin: false, isChargingHeavy: false, dungeonType: 'shard', timer: 25.0, isDying: false
+        };
+    } else {
+        const tpl = pickMonsterForCurrentStage();
+        const mutantKey = isBoss ? 'none' : rollMutantType();
+        const mInfo = MUTANT_TYPES[mutantKey];
+
+        const rawHp = isBoss ? Math.floor(baseHp * 6.5) : Math.floor(baseHp * mInfo.hpMult);
+        const rawAtk = isBoss ? Math.floor(baseAtk * 1.9) : Math.floor(baseAtk * mInfo.atkMult);
+        const rawDef = isBoss ? Math.floor(baseDef * 1.6) : Math.floor(baseDef * mInfo.defMult);
+
+        monster = {
+            tpl,
+            name: isBoss ? `[BOSS] 파멸의 ${tpl.name}` : tpl.name,
+            mutant: mutantKey,
+            maxHp: rawHp,
+            hp: rawHp,
+            ghostHp: rawHp,
+            def: rawDef,
+            atk: rawAtk,
+            atkGauge: 0,
+            isBoss,
+            isTreasureGoblin: false,
+            isChargingHeavy: false,
+            dungeonType: null,
+            timer: 22.0,
+            isDying: false
+        };
+    }
+    updateBattleUI();
+}
+
+function startBossBattle() {
+    if (monster.isBoss || state.isDefeated || state.isResting || monster.isDying) return;
+    spawnMonster(true, null);
+    showToast("⚠️ 스테이지 보스 출현! 강타 예고를 주의하세요!", "error");
+}
+
+function enterDungeon(type) {
+    if (state.isDefeated || state.isResting) {
+        showToast("먼저 체력을 회복한 뒤 던전에 입장하세요!", "error");
+        return;
+    }
+    if (monster.dungeonType) return;
+    if (state.dungeonTickets[type] <= 0) {
+        showToast("오늘의 던전 입장권을 모두 사용했습니다!", "error");
+        return;
+    }
+    state.dungeonTickets[type] -= 1;
+    switchTab('forge');
+    spawnMonster(true, type);
+    showToast("🏰 시련의 던전에 입장했습니다!", "success");
+}
+
+function playerAttackMonster(mult = 1.0, isManual = false, clickEvent = null) {
+    if (state.isDefeated || state.isResting || monster.isDying) return;
+
+    const eqSword = state.equippedSlot !== -1 ? state.inventory[state.equippedSlot] : null;
+    const pInfo = eqSword ? PREFIX_DATA[eqSword.prefix || 'normal'] : PREFIX_DATA.normal;
+
+    let rawAtk = getPlayerTotalAtk() * mult;
+    if (isManual) rawAtk *= 1.18;
+
+    const rubyCrit = (state.soulStones.ruby || 0) * 2;
+    const critRate = 6 + state.upgrades.critChance * 3 + pInfo.critBonus + rubyCrit + (berserkTimeLeft > 0 ? 25 : 0) + (comboCount >= 100 ? 15 : 0);
+    const isCrit = Math.random() * 100 < critRate;
+    const critMult = hasAchievement('stage10') ? 2.75 : 2.35;
+    if (isCrit) rawAtk *= critMult;
+
+    const sapPen = (state.soulStones.sapphire || 0) * 0.04;
+    const totalPen = Math.min(0.95, pInfo.penBonus + sapPen + (state.tacticalBuffs.pen || 0) * 0.15);
+    const effectiveDef = monster.def * (1 - totalPen);
+    const finalDmg = Math.max(Math.ceil(rawAtk * 0.15), Math.floor(rawAtk - effectiveDef));
+
+    const wasOverkill = finalDmg >= monster.maxHp && monster.hp === monster.maxHp;
+    monster.hp = Math.max(0, monster.hp - finalDmg);
+
+    // 콤보 및 피버 게이지 충전
+    comboCount += 1;
+    comboResetTimer = 3.0;
+    if (feverTimeLeft <= 0) {
+        feverGauge = Math.min(100, feverGauge + (isManual ? 4.5 : 2.5));
+        if (feverGauge >= 100) {
+            feverTimeLeft = 8.0;
+            feverGauge = 0;
+            playSound('enhanceSuccess');
+            triggerFlash('rgba(249, 115, 22, 0.35)');
+            showToast("🔥 FEVER TIME 폭발! 8초간 공속 2배 & 골드 2배!", "success");
+        }
+    }
+
+    const emLeech = (state.soulStones.emerald || 0) * 0.006;
+    const totalLeech = pInfo.lifesteal + emLeech + (state.tacticalBuffs.leech || 0) * 0.02;
+    if (totalLeech > 0) {
+        healPlayer(Math.max(1, Math.floor(finalDmg * totalLeech)), false);
+    }
+
+    const pVis = document.getElementById('playerVisual');
+    pVis.classList.remove('p-slash'); void pVis.offsetWidth; pVis.classList.add('p-slash');
+    spawnSlashEffect(isCrit);
+
+    if (isCrit) playSound('crit');
+    else if (isManual) playSound('hit');
+
+    if (monster.hp <= 0) {
+        monster.isDying = true;
+        const mVis = document.getElementById('monsterVisual');
+        mVis.classList.remove('m-hit'); void mVis.offsetWidth; mVis.classList.add('m-overkill');
+
+        spawnArenaPopup(
+            wasOverkill ? `⚡ OVERKILL -${formatNumber(finalDmg)}!` : (isCrit ? `💥 ${formatNumber(finalDmg)}!` : `-${formatNumber(finalDmg)}`),
+            wasOverkill ? 'text-rose-300 text-base sm:text-lg' : (isCrit ? 'text-amber-300 text-lg' : 'text-white text-sm'),
+            false,
+            clickEvent
+        );
+        updateBattleUI();
+
+        setTimeout(() => {
+            onMonsterKilled();
+        }, 340);
+    } else {
+        const mVis = document.getElementById('monsterVisual');
+        mVis.classList.remove('m-hit'); void mVis.offsetWidth; mVis.classList.add('m-hit');
+        spawnArenaPopup(
+            isCrit ? `💥 ${formatNumber(finalDmg)}!` : `-${formatNumber(finalDmg)}`,
+            isCrit ? 'text-amber-300 text-lg sm:text-xl' : 'text-white text-xs sm:text-sm',
+            false,
+            clickEvent
+        );
+        updateBattleUI();
+    }
+}
+
+function spawnSlashEffect(isCrit) {
+    const arena = document.getElementById('battleArena');
+    const slash = document.createElement('div');
+    slash.className = 'slash-fx';
+    slash.style.right = '14%';
+    slash.style.top = '32%';
+    const color = isCrit ? '#fbbf24' : '#38bdf8';
+    slash.innerHTML = `
+        <svg width="74" height="74" viewBox="0 0 100 100">
+            <path d="M15,85 Q55,45 88,12 Q60,55 22,90 Z" fill="${color}" opacity="0.9"/>
+        </svg>`;
+    arena.appendChild(slash);
+    setTimeout(() => slash.remove(), 280);
+}
+
+function monsterCounterAttack() {
+    if (state.isDefeated || state.isResting || monster.isDying) return;
+
+    const dmgReduction = Math.min(0.65, state.relics.aegis * 0.02);
+    const heavyMult = monster.isChargingHeavy ? 1.85 : 1.0;
+    const rawDmg = monster.atk * heavyMult * (0.92 + Math.random() * 0.16);
+    const finalDmg = Math.max(1, Math.floor(rawDmg * (1 - dmgReduction)));
+
+    monster.isChargingHeavy = false;
+    state.playerHp = Math.max(0, state.playerHp - finalDmg);
+
+    if ((state.tacticalBuffs.thorns || 0) > 0 && !monster.isDying) {
+        const reflectDmg = Math.max(1, Math.floor(finalDmg * state.tacticalBuffs.thorns * 0.6));
+        monster.hp = Math.max(0, monster.hp - reflectDmg);
+        spawnArenaPopup(`🌵 반사 -${formatNumber(reflectDmg)}`, 'text-emerald-300 text-xs font-black', false);
+        if (monster.hp <= 0) {
+            monster.isDying = true;
+            setTimeout(() => onMonsterKilled(), 280);
+        }
+    }
+
+    const pVis = document.getElementById('playerVisual');
+    pVis.classList.remove('m-hit'); void pVis.offsetWidth; pVis.classList.add('m-hit');
+
+    spawnArenaPopup(
+        heavyMult > 1 ? `🔥 강타 -${formatNumber(finalDmg)}` : `-${formatNumber(finalDmg)}`,
+        'text-rose-400 text-sm font-black',
+        true
+    );
+    playSound('hurt');
+    if (heavyMult > 1) triggerScreenShake();
+
+    if (state.playerHp <= 0) {
+        onPlayerDefeated();
+    } else if (state.autoRetreat && state.playerHp <= getPlayerMaxHp() * 0.2 && !monster.dungeonType) {
+        state.isResting = true;
+        showToast("🛡️ 안전 후퇴 발동! 체력이 20% 이하가 되어 휴식합니다.", "info");
+        updateBattleUI();
+    } else {
+        updateBattleUI();
+    }
+}
+
+function onPlayerDefeated() {
+    state.isDefeated = true;
+    state.playerHp = 0;
+    comboCount = 0;
+    feverTimeLeft = 0;
+    triggerFlash('rgba(244, 63, 94, 0.42)');
+    triggerScreenShake();
+    showToast("💀 체력이 0이 되어 안전 구역으로 후퇴했습니다!", "error");
+
+    if (monster.isBoss || monster.dungeonType || monster.isTreasureGoblin) {
+        spawnMonster(false, null);
+    }
+    updateBattleUI();
+}
+
+function onMonsterKilled() {
+    state.totalKills += 1;
+    advanceQuest('kill', 1);
+
+    if (state.relics.chalice > 0) {
+        healPlayer(Math.floor(getPlayerMaxHp() * (state.relics.chalice * 0.05)), true);
+    }
+
+    const mInfo = MUTANT_TYPES[monster.mutant] || MUTANT_TYPES.none;
+    const topazGoldMult = 1 + (state.soulStones.topaz || 0) * 0.18;
+    const feverGoldMult = feverTimeLeft > 0 ? 2.0 : 1.0;
+    const tacticalGoldMult = 1 + (state.tacticalBuffs.greed || 0) * 0.25;
+    const goldMult = (1 + state.prestigeUpgrades.goldMult * 0.30) * (1 + state.relics.crown * 0.25) * topazGoldMult * tacticalGoldMult * feverGoldMult * mInfo.goldMult * (hasAchievement('kills50') ? 1.25 : 1.0);
+    const baseGold = Math.floor(17 * Math.pow(1.45, state.stage - 1) * goldMult);
+
+    if (monster.isTreasureGoblin) {
+        const tGold = baseGold * 4;
+        const tGems = 4 + Math.floor(Math.random() * 5);
+        state.gold += tGold;
+        state.gems += tGems;
+        state.shards += 2;
+        playSound('enhanceSuccess');
+        showToast(`💰 보물 고블린 처치! +${formatNumber(tGold)} G, +${tGems} 💎, +2 🧩!`, "success");
+        spawnMonster(false, null);
+    } else if (monster.dungeonType === 'gold') {
+        const dGold = baseGold * 30;
+        state.gold += dGold;
+        showToast(`💰 황금 던전 클리어! +${formatNumber(dGold)} G 획득!`, "success");
+        spawnMonster(false, null);
+    } else if (monster.dungeonType === 'shard') {
+        const dShards = 4 + Math.floor(Math.random() * 5);
+        state.shards += dShards;
+        showToast(`🧩 파편 던전 클리어! 검의 파편 +${dShards}개 획득!`, "success");
+        spawnMonster(false, null);
+    } else if (monster.isBoss) {
+        const bGold = baseGold * 6;
+        state.gold += bGold;
+        state.stage += 1;
+        if (state.stage > state.maxStageEver) state.maxStageEver = state.stage;
+        state.stageKills = 0;
+        showToast(`🎉 STAGE ${state.stage} 진출! (+${formatNumber(bGold)} G)`, "success");
+        spawnMonster(false, null);
+        openTacticalDraftModal();
+    } else {
+        state.gold += baseGold;
+        state.stageKills += 1;
+        if (mInfo.extraShard > 0) {
+            state.shards += mInfo.extraShard;
+            showToast(`✨ [${mInfo.name}] 처치 보너스! 파편 +${mInfo.extraShard} 🧩 & 골드 대폭 획득!`, "success");
+        }
+        spawnMonster(false, null);
+    }
+
+    updateAllUI();
+}
+
+function openTacticalDraftModal() {
+    const pool = [...TACTICAL_CARDS].sort(() => Math.random() - 0.5).slice(0, 3);
+    const container = document.getElementById('tacticalCardChoices');
+    container.innerHTML = pool.map(card => {
+        const curStack = state.tacticalBuffs[card.id] || 0;
+        return `
+            <button onclick="selectTacticalCard('${card.id}')" class="p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left flex items-center gap-3 transition active:scale-98">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0">
+                    ${card.icon}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-sm text-amber-300">${card.name}</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">보유 ${curStack}중첩</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5">${card.desc}</p>
+                </div>
+            </button>
+        `;
+    }).join('');
+    openModal('tacticalDraftModal');
+}
+
+function selectTacticalCard(cardId) {
+    state.tacticalBuffs[cardId] = (state.tacticalBuffs[cardId] || 0) + 1;
+    const card = TACTICAL_CARDS.find(c => c.id === cardId);
+    closeModal('tacticalDraftModal');
+    playSound('enhanceSuccess');
+    showToast(`🃏 [${card.name}] 축복 획득! (${card.perStack(state.tacticalBuffs[cardId])})`, "success");
+    updateAllUI();
+}
+
+function healPlayer(amount, showPopup = true) {
+    const maxHp = getPlayerMaxHp();
+    if (state.playerHp >= maxHp) return;
+    const actual = Math.min(maxHp - state.playerHp, amount);
+    state.playerHp += actual;
+    if (showPopup && actual > 0) {
+        spawnArenaPopup(`+${formatNumber(actual)}`, 'text-emerald-400 text-xs font-bold', true);
+    }
+}
+
+function toggleAutoRetreat() {
+    state.autoRetreat = !state.autoRetreat;
+    saveGame();
+    updateBattleUI();
+}
+
+function toggleRestMode() {
+    if (state.isDefeated) return;
+    state.isResting = !state.isResting;
+    updateBattleUI();
+}
+
+function resumeBattleNow() {
+    if (state.playerHp < Math.ceil(getPlayerMaxHp() * 0.2)) {
+        showToast("최소 HP 20% 이상 회복되어야 복귀할 수 있습니다!", "error");
+        return;
+    }
+    state.isDefeated = false;
+    state.isResting = false;
+    updateBattleUI();
+}
+
+function usePotion() {
+    const maxHp = getPlayerMaxHp();
+    if (state.playerHp >= maxHp && !state.isDefeated && !state.isResting) {
+        showToast("이미 체력이 가득 차 있습니다!", "info");
+        return;
+    }
+    const cost = getPotionCost();
+    if (state.gold < cost) {
+        showToast("물약 구매 골드가 부족합니다!", "error");
+        return;
+    }
+    state.gold -= cost;
+    state.playerHp = maxHp;
+    state.isDefeated = false;
+    state.isResting = false;
+    playSound('merge');
+    showToast("🧪 회복 물약 사용! HP 100% 완치!", "success");
+    updateAllUI();
+}
+
+function handleManualAttack(e) {
+    if (state.isDefeated || state.isResting || monster.isDying) return;
+    playerAttackMonster(1.0, true, e);
+}
+
+function spawnArenaPopup(text, colorClass, isPlayerSide, e = null) {
+    const arena = document.getElementById('battleArena');
+    const el = document.createElement('div');
+    el.className = `dmg-popup ${colorClass}`;
+    el.textContent = text;
+
+    const rect = arena.getBoundingClientRect();
+    let x = isPlayerSide ? rect.width * 0.25 : rect.width * 0.74;
+    let y = rect.height * 0.42;
+
+    if (e && e.clientX) {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top - 10;
+    } else {
+        x += (Math.random() * 22 - 11);
+    }
+
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    arena.appendChild(el);
+    setTimeout(() => el.remove(), 780);
+}
+
+/**
+ * ============================================================================
+ * 9. 영혼석 각인, 도박장, 스킬, 미션, 연구, 유물, 초월
+ * ============================================================================
+ */
+function upgradeSoulStone(id) {
+    const cfg = SOUL_STONE_CONFIGS.find(s => s.id === id);
+    const lv = state.soulStones[id] || 0;
+    if (lv >= cfg.max) return;
+    const cost = cfg.baseCost + lv * 2;
+    if (state.shards < cost) {
+        showToast(`검의 파편 🧩 ${cost}개가 필요합니다!`, "error");
+        return;
+    }
+    state.shards -= cost;
+    state.soulStones[id] = lv + 1;
+    playSound('enhanceSuccess');
+    showToast(`💠 [${cfg.name}] Lv.${lv + 1} 각인 완료!`, "success");
+    renderResearchTab();
+    updateAllUI();
+}
+
+function setBetRatio(ratio) {
+    currentBetRatio = ratio;
+    document.querySelectorAll('.bet-ratio-btn').forEach(btn => {
+        btn.className = "bet-ratio-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-bold";
+    });
+    const activeBtn = document.getElementById(`betRatio-${ratio}`);
+    if (activeBtn) {
+        activeBtn.className = "bet-ratio-btn py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black";
+    }
+    updateGambleUI();
+}
+
+function getCurrentBetAmount() {
+    return Math.max(10, Math.floor(state.gold * currentBetRatio));
+}
+
+function updateGambleUI() {
+    const el = document.getElementById('currentBetAmountText');
+    if (el) el.textContent = `${formatNumber(getCurrentBetAmount())} G`;
+}
+
+function playGamble(multiplier, winChance) {
+    if (isGamblingAnim) return;
+    const bet = getCurrentBetAmount();
+    if (state.gold < bet || bet < 10) {
+        showToast("베팅할 골드가 부족합니다! (최소 10 G)", "error");
+        return;
+    }
+
+    state.gold -= bet;
+    isGamblingAnim = true;
+    updateAllUI();
+
+    const box = document.getElementById('gambleDisplayBox');
+    let ticks = 0;
+    const rollInterval = setInterval(() => {
+        ticks++;
+        playSound('hit');
+        const faces = ['🎲 1', '🎲 2', '🎲 3', '🎲 4', '🎲 5', '🎲 6', '💎 JACKPOT'];
+        box.innerHTML = `<span class="text-amber-300 animate-pulse">주사위 굴리는 중... ${faces[ticks % faces.length]}</span>`;
+        if (ticks >= 8) {
+            clearInterval(rollInterval);
+            isGamblingAnim = false;
+            const won = Math.random() * 100 < winChance;
+            if (won) {
+                const prize = bet * multiplier;
+                state.gold += prize;
+                playSound('enhanceSuccess');
+                triggerFlash('rgba(251, 191, 36, 0.38)');
+                const rect = box.getBoundingClientRect();
+                spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, ['#fbbf24', '#34d399', '#38bdf8'], 36, 10);
+                box.innerHTML = `<span class="text-emerald-400 text-sm sm:text-base">🎉 ${multiplier}배 적중!! +${formatNumber(prize)} G 획득!</span>`;
+                showToast(`🎰 도박 대성공! +${formatNumber(prize)} G 획득!`, "success");
+            } else {
+                playSound('enhanceFail');
+                triggerScreenShake();
+                box.innerHTML = `<span class="text-rose-400">💀 아깝습니다! 베팅금 -${formatNumber(bet)} G 소멸...</span>`;
+            }
+            updateAllUI();
+        }
+    }, 60);
+}
+
+const SKILL_CONFIGS = [
+    { name: "일격필살", desc: "적에게 강력한 내려치기 피해를 입힙니다.", cd: 6.5, baseVal: 3.2, perLv: 0.45 },
+    { name: "흡혈베기", desc: "피해를 입히고 최대 HP의 일정 비율을 회복합니다.", cd: 9.5, baseVal: 2.0, perLv: 0.3 },
+    { name: "광폭화",   desc: "6초간 공격력 1.75배 및 치명타 확률 +25% 상승", cd: 15, baseVal: 6.0, perLv: 0.5 }
+];
+
+function castSkill(idx) {
+    if (state.isDefeated || state.isResting || monster.isDying || skillCooldowns[idx] > 0) return;
+    const cfg = SKILL_CONFIGS[idx];
+    const lv = state.skillLevels[idx];
+    const cdrMult = Math.max(0.55, 1 - (state.soulStones.sapphire || 0) * 0.02);
+    skillCooldowns[idx] = cfg.cd * cdrMult;
+    playSound('skill');
+
+    if (idx === 0) {
+        triggerFlash('rgba(251, 191, 36, 0.25)');
+        playerAttackMonster(cfg.baseVal + (lv - 1) * cfg.perLv, false);
+    } else if (idx === 1) {
+        const healPct = Math.min(0.7, 0.25 + (lv - 1) * 0.03);
+        playerAttackMonster(cfg.baseVal + (lv - 1) * cfg.perLv, false);
+        healPlayer(Math.floor(getPlayerMaxHp() * healPct), true);
+        triggerFlash('rgba(244, 63, 94, 0.25)');
+    } else if (idx === 2) {
+        berserkTimeLeft = cfg.baseVal + (lv - 1) * cfg.perLv;
+        triggerFlash('rgba(249, 115, 22, 0.3)');
+        showToast(`🔥 광폭화 발동! (${berserkTimeLeft.toFixed(1)}초간 공격력 1.75배)`, "info");
+    }
+    updateBattleUI();
+}
+
+function toggleAutoSkill() {
+    state.autoSkill = document.getElementById('autoSkillCheckbox').checked;
+    saveGame();
+}
+
+function advanceQuest(type, amount) {
+    if (state.quest.type !== type) return;
+    state.quest.progress += amount;
+    updateQuestUI();
+}
+
+function claimQuestReward() {
+    if (state.quest.progress < state.quest.target) return;
+    state.gems += state.quest.rewardGems;
+    playSound('enhanceSuccess');
+    showToast(`🎯 미션 완료! 다이아 +${state.quest.rewardGems} 💎 획득!`, "success");
+
+    const types = ['kill', 'merge', 'enhance'];
+    const nextType = types[(types.indexOf(state.quest.type) + 1) % types.length];
+    state.quest = {
+        type: nextType,
+        progress: 0,
+        target: nextType === 'kill' ? 12 : nextType === 'merge' ? 6 : 5,
+        rewardGems: 5 + Math.floor(state.stage / 2)
+    };
+    updateAllUI();
+}
+
+function updateQuestUI() {
+    const labels = { kill: "몬스터 처치", merge: "검 합성하기", enhance: "강화 시도하기" };
+    const q = state.quest;
+    const ready = q.progress >= q.target;
+    document.getElementById('questText').textContent = `🎯 ${labels[q.type]} (${Math.min(q.progress, q.target)}/${q.target})`;
+    const badge = document.getElementById('questRewardBadge');
+    if (ready) {
+        badge.className = "px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 font-black shrink-0 animate-bounce";
+        badge.textContent = `보상받기 💎${q.rewardGems}`;
+    } else {
+        badge.className = "px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-bold shrink-0";
+        badge.textContent = `💎 ${q.rewardGems}`;
+    }
+}
+
+const UPGRADE_CONFIGS = [
+    { id: 'startTier',   name: "화로 화력 증폭 (시작 등급 UP)", desc: "제련 시 등장하는 기본 검의 단계가 상승합니다.", max: 9, base: 500, mult: 3.8, val: lv => `${1 + lv}단계 검 제련` },
+    { id: 'baseHpLv',    name: "강철 육체 단련 (기본 HP UP)", desc: "대장장이의 기본 최대 생명력이 증가합니다.", max: 60, base: 140, mult: 1.45, val: lv => `+${formatNumber(lv * 110)} HP` },
+    { id: 'baseAtkLv',   name: "근력 단련 (기본 공격력 UP)", desc: "대장장이의 기본 공격력이 증가합니다.", max: 60, base: 140, mult: 1.45, val: lv => `+${formatNumber(lv * 7)} ATK` },
+    { id: 'regenLv',     name: "생명력 자연 치유", desc: "매초 자동으로 회복되는 체력이 증가합니다.", max: 30, base: 240, mult: 1.55, val: lv => `초당 +${(1.2 + lv * 0.45).toFixed(1)}% HP` },
+    { id: 'enhanceRate', name: "장인의 망치질 (강화 확률 UP)", desc: "모루 강화 성공 확률이 영구 상승합니다.", max: 15, base: 420, mult: 2.1, val: lv => `+${(lv * 1.5).toFixed(1)}%` },
+    { id: 'critChance',  name: "약점 간파 (치명타 확률)", desc: "치명타 피해 발동 확률이 증가합니다.", max: 20, base: 360, mult: 1.8, val: lv => `${6 + lv * 3}%` }
+];
+
+function buyUpgrade(id) {
+    const cfg = UPGRADE_CONFIGS.find(u => u.id === id);
+    const lv = state.upgrades[id];
+    if (lv >= cfg.max) return;
+    const cost = Math.floor(cfg.base * Math.pow(cfg.mult, lv));
+    if (state.gold < cost) { showToast("골드가 부족합니다!", "error"); return; }
+    state.gold -= cost;
+    state.upgrades[id] += 1;
+    playSound('enhanceSuccess');
+    renderResearchTab();
+    updateAllUI();
+}
+
+function upgradeSkill(idx) {
+    const lv = state.skillLevels[idx];
+    const cost = Math.floor(420 * Math.pow(2.25, lv - 1));
+    if (state.gold < cost) { showToast("골드가 부족합니다!", "error"); return; }
+    state.gold -= cost;
+    state.skillLevels[idx] += 1;
+    playSound('enhanceSuccess');
+    renderResearchTab();
+    updateAllUI();
+}
+
+function summonRelic() {
+    if (state.gems < 30) { showToast("다이아 💎가 부족합니다! (30개 필요)", "error"); return; }
+    state.gems -= 30;
+    const pick = RELIC_CONFIGS[Math.floor(Math.random() * RELIC_CONFIGS.length)];
+    state.relics[pick.id] += 1;
+    playSound('enhanceSuccess');
+    triggerFlash('rgba(34, 211, 238, 0.3)');
+    showToast(`🏺 유물 획득! [${pick.name}] Lv.${state.relics[pick.id]} 달성!`, "success");
+    renderRelicsTab();
+    updateAllUI();
+}
+
+function getPrestigeGain() {
+    if (state.stage < 10) return 0;
+    return Math.floor(Math.pow(state.stage - 8, 1.6));
+}
+
+function performPrestige() {
+    const gain = getPrestigeGain();
+    if (gain <= 0) return;
+    state.stones += gain;
+    const keep = {
+        stones: state.stones, gems: state.gems, shards: state.shards,
+        unlockedTiers: [...state.unlockedTiers], relics: { ...state.relics },
+        soulStones: { ...state.soulStones },
+        prestigeUpgrades: { ...state.prestigeUpgrades }, dungeonTickets: { ...state.dungeonTickets },
+        totalKills: state.totalKills, maxPlusEver: state.maxPlusEver, maxStageEver: state.maxStageEver,
+        soundEnabled: state.soundEnabled, autoSkill: state.autoSkill, autoRetreat: state.autoRetreat
+    };
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    Object.assign(state, keep);
+    state.playerHp = getPlayerMaxHp();
+    spawnMonster(false, null);
+    switchTab('forge');
+    triggerFlash('rgba(168, 85, 247, 0.45)');
+    playSound('enhanceSuccess');
+    showToast(`🔮 초월 완료! 초월석 +${gain}개 획득!`, "success");
+    updateAllUI();
+}
+
+function buyPrestigeUpgrade(key) {
+    const cost = 2 + state.prestigeUpgrades[key] * 2;
+    if (state.stones < cost) { showToast("초월석 🔮이 부족합니다!", "error"); return; }
+    state.stones -= cost;
+    state.prestigeUpgrades[key] += 1;
+    playSound('enhanceSuccess');
+    renderDungeonTab();
+    updateAllUI();
+}
+
+/**
+ * ============================================================================
+ * 10. UI 렌더링 및 탭 제어
+ * ============================================================================
+ */
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = "nav-btn py-2 rounded-xl bg-slate-800 border border-transparent text-slate-400 text-xs font-bold flex flex-col items-center";
+    });
+    document.getElementById(`nav-${tabName}`).className = "nav-btn py-2 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-black flex flex-col items-center";
+
+    if (tabName === 'research') renderResearchTab();
+    if (tabName === 'relics') renderRelicsTab();
+    if (tabName === 'dungeon') renderDungeonTab();
+}
+
+function updateAllUI() {
+    document.getElementById('goldDisplay').textContent = `${formatNumber(state.gold)} G`;
+    document.getElementById('gemDisplay').textContent = `${formatNumber(state.gems)} 💎`;
+    document.getElementById('shardDisplay').textContent = `${formatNumber(state.shards)} 🧩`;
+    document.getElementById('stoneDisplay').textContent = `${formatNumber(state.stones)} 🔮`;
+
+    const unlockedAchs = ACHIEVEMENTS.filter(a => a.check(state));
+    document.getElementById('activeTitleBadge').textContent = unlockedAchs.length > 0
+        ? unlockedAchs[unlockedAchs.length - 1].name
+        : "견습 대장장이";
+
+    const sTier = getSummonTier();
+    document.getElementById('summonTitle').textContent = `${SWORD_DATA[sTier - 1].name} 제련 (${sTier}단계)`;
+    document.getElementById('summonCostText').textContent = `${formatNumber(getSummonCost())} G`;
+
+    const pCost = `${formatNumber(getPotionCost())} G`;
+    document.getElementById('potionCostText').textContent = pCost;
+    document.getElementById('overlayPotionCost').textContent = pCost;
+    document.getElementById('autoSkillCheckbox').checked = state.autoSkill;
+
+    updateGambleUI();
+    renderInventory();
+    renderSelectedPanel();
+    updateBattleUI();
+    updateQuestUI();
+}
+
+let lastEquippedSignature = "";
+
+function updateBattleUI() {
+    document.getElementById('stageBadge').textContent = `STAGE ${state.stage}`;
+    document.getElementById('stageProgressText').textContent = monster.isBoss ? "보스전" : `${Math.min(5, state.stageKills)}/5`;
+
+    // 스테이지 구역 테마 적용
+    const zone = getCurrentZoneTheme(state.stage);
+    const zBadge = document.getElementById('zoneThemeBadge');
+    zBadge.textContent = zone.name;
+    zBadge.className = `px-2 py-0.5 rounded-full border font-bold text-[10px] ${zone.badge}`;
+
+    const arena = document.getElementById('battleArena');
+    arena.className = `relative rounded-2xl bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${zone.bg} border border-slate-800 overflow-hidden cursor-pointer flex flex-col justify-between p-2.5 transition-all duration-300 ${feverTimeLeft > 0 ? 'fever-border' : ''}`;
+
+    const dBadge = document.getElementById('dungeonBadge');
+    if (monster.dungeonType) {
+        dBadge.classList.remove('hidden');
+        dBadge.textContent = monster.dungeonType === 'gold' ? "🏰 골드 던전" : "🏰 파편 던전";
+    } else {
+        dBadge.classList.add('hidden');
+    }
+
+    const bossBtn = document.getElementById('bossChallengeBtn');
+    const timerBox = document.getElementById('battleTimerBox');
+    if (monster.isBoss || monster.dungeonType) {
+        bossBtn.classList.add('hidden');
+        timerBox.classList.remove('hidden');
+        document.getElementById('battleTimerText').textContent = Math.max(0, monster.timer).toFixed(1);
+    } else {
+        timerBox.classList.add('hidden');
+        bossBtn.classList.toggle('hidden', state.stageKills < 5);
+    }
+
+    const arBtn = document.getElementById('autoRetreatBtn');
+    arBtn.textContent = state.autoRetreat ? "🛡️ 안전후퇴 ON" : "🔥 끝장돌파 ON";
+    arBtn.className = state.autoRetreat
+        ? "px-2 py-1 rounded-lg bg-slate-800 border border-cyan-500/40 text-[10px] font-bold text-cyan-300"
+        : "px-2 py-1 rounded-lg bg-rose-950 border border-rose-500/50 text-[10px] font-bold text-rose-300";
+
+    const restBtn = document.getElementById('restToggleBtn');
+    restBtn.textContent = state.isResting ? "⚔️ 복귀" : "⛺ 휴식";
+    restBtn.className = state.isResting
+        ? "px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] animate-pulse"
+        : "px-2 py-1 rounded-lg bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 font-bold text-[10px]";
+
+    const eqSword = state.equippedSlot !== -1 ? state.inventory[state.equippedSlot] : null;
+    const eqSig = eqSword ? `${eqSword.tier}_${eqSword.plus}_${eqSword.prefix}` : 'none';
+    if (eqSig !== lastEquippedSignature) {
+        lastEquippedSignature = eqSig;
+        if (eqSword) {
+            document.getElementById('eqSvgMini').innerHTML = getSwordSvg(eqSword.tier, eqSword.plus);
+            document.getElementById('playerWeaponSvg').innerHTML = getSwordSvg(eqSword.tier, eqSword.plus);
+        } else {
+            document.getElementById('eqSvgMini').innerHTML = `<span class="text-base">✊</span>`;
+            document.getElementById('playerWeaponSvg').innerHTML = "";
+        }
+    }
+
+    if (eqSword) {
+        const info = SWORD_DATA[eqSword.tier - 1];
+        const st = getSwordStats(eqSword);
+        document.getElementById('eqName').textContent = `${eqSword.plus > 0 ? `+${eqSword.plus} ` : ''}${info.name}`;
+        document.getElementById('statSwordHpText').textContent = formatNumber(st.hp);
+    } else {
+        document.getElementById('eqName').textContent = "맨손 상태";
+        document.getElementById('statSwordHpText').textContent = "0";
+    }
+    document.getElementById('statAtkText').textContent = formatNumber(getPlayerTotalAtk());
+
+    // 피버 게이지 및 상태 표시
+    const feverLabel = document.getElementById('feverLabel');
+    const feverBar = document.getElementById('feverGaugeBar');
+    if (feverTimeLeft > 0) {
+        feverLabel.textContent = `🔥 FEVER ${feverTimeLeft.toFixed(1)}s`;
+        feverLabel.className = "text-[10px] font-black text-amber-300 animate-pulse";
+        feverBar.style.width = `${(feverTimeLeft / 8.0) * 100}%`;
+    } else {
+        feverLabel.textContent = "🔥 FEVER";
+        feverLabel.className = "text-[10px] font-black text-orange-400";
+        feverBar.style.width = `${feverGauge}%`;
+    }
+
+    const totalCards = Object.values(state.tacticalBuffs).reduce((a, b) => a + b, 0);
+    const tcBadge = document.getElementById('tacticalCountBadge');
+    if (totalCards > 0) {
+        tcBadge.classList.remove('hidden');
+        document.getElementById('tacticalCountText').textContent = totalCards;
+    } else {
+        tcBadge.classList.add('hidden');
+    }
+
+    const comboBadge = document.getElementById('comboBadge');
+    if (comboCount >= 5) {
+        comboBadge.classList.remove('hidden');
+        document.getElementById('comboCountText').textContent = comboCount >= 100 ? `${comboCount} (MAX 버프!)` : comboCount;
+    } else {
+        comboBadge.classList.add('hidden');
+    }
+    document.getElementById('berserkBadge').classList.toggle('hidden', berserkTimeLeft <= 0);
+
+    // 플레이어 HP 바
+    const maxHp = getPlayerMaxHp();
+    state.playerHp = Math.min(maxHp, state.playerHp);
+    const pPct = Math.max(0, Math.min(100, (state.playerHp / maxHp) * 100));
+    document.getElementById('playerHpBar').style.width = `${pPct}%`;
+    document.getElementById('playerHpText').textContent = `${formatNumber(state.playerHp)} / ${formatNumber(maxHp)}`;
+
+    // 커스텀 SVG 몬스터 렌더링 (변경 시에만 DOM 갱신)
+    const mSig = `${monster.tpl.id}_${monster.isBoss}_${monster.mutant}`;
+    if (mSig !== lastMonsterVisualSig) {
+        lastMonsterVisualSig = mSig;
+        document.getElementById('monsterVisual').innerHTML = getMonsterSvg(monster.tpl, monster.isBoss, monster.mutant);
+    }
+
+    document.getElementById('bossMagicCircle').classList.toggle('hidden', !monster.isBoss);
+    document.getElementById('treasureEscapeAlert').classList.toggle('hidden', !monster.isTreasureGoblin);
+    if (monster.isTreasureGoblin) {
+        document.getElementById('treasureTimerText').textContent = Math.max(0, monster.timer).toFixed(1);
+    }
+
+    const mInfo = MUTANT_TYPES[monster.mutant] || MUTANT_TYPES.none;
+    const mBadge = document.getElementById('monsterMutantBadge');
+    if (monster.mutant !== 'none' && !monster.isBoss && !monster.isTreasureGoblin) {
+        mBadge.classList.remove('hidden');
+        mBadge.textContent = mInfo.name;
+        mBadge.className = `px-1 rounded text-[9px] font-black shrink-0 ${mInfo.badgeClass}`;
+    } else {
+        mBadge.classList.add('hidden');
+    }
+
+    document.getElementById('monsterName').textContent = monster.name;
+    document.getElementById('monsterDefBadge').textContent = `🛡️${formatNumber(monster.def)}`;
+
+    const mPct = Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100));
+    const gPct = Math.max(mPct, Math.min(100, (monster.ghostHp / monster.maxHp) * 100));
+    document.getElementById('monsterHpBar').style.width = `${mPct}%`;
+    document.getElementById('monsterGhostHpBar').style.width = `${gPct}%`;
+    document.getElementById('monsterHpText').textContent = `${formatNumber(Math.max(0, monster.hp))} / ${formatNumber(monster.maxHp)}`;
+
+    document.getElementById('monsterAtkBar').style.width = `${Math.min(100, monster.atkGauge)}%`;
+    document.getElementById('monsterAtkBar').className = monster.isChargingHeavy
+        ? "h-full bg-red-500 transition-all duration-75"
+        : "h-full bg-amber-400 transition-all duration-75";
+    document.getElementById('bossChargeAlert').classList.toggle('hidden', !monster.isChargingHeavy || monster.isTreasureGoblin);
+
+    for (let i = 0; i < 3; i++) {
+        const cdEl = document.getElementById(`skillCd${i}`);
+        if (skillCooldowns[i] > 0) {
+            cdEl.classList.remove('hidden');
+            cdEl.textContent = `${skillCooldowns[i].toFixed(1)}s`;
+        } else {
+            cdEl.classList.add('hidden');
+        }
+    }
+
+    const recOverlay = document.getElementById('recoveryOverlay');
+    if (state.isDefeated || state.isResting) {
+        recOverlay.classList.remove('hidden');
+        document.getElementById('recoveryTitle').textContent = state.isDefeated
+            ? "💀 체력이 고갈되어 후퇴했습니다!"
+            : "⛺ 안전 구역에서 체력 회복 중";
+        document.getElementById('recoveryDesc').textContent = `현재 HP: ${formatNumber(state.playerHp)} / ${formatNumber(maxHp)} (${Math.floor(pPct)}%)`;
+        document.getElementById('recoveryBar').style.width = `${pPct}%`;
+    } else {
+        recOverlay.classList.add('hidden');
+    }
+}
+
+function renderInventory() {
+    const grid = document.getElementById('inventoryGrid');
+    grid.innerHTML = '';
+    const count = state.inventory.filter(s => s !== null).length;
+    document.getElementById('invCountText').textContent = `(${count}/12)`;
+
+    const selSword = state.selectedSlot !== null ? state.inventory[state.selectedSlot] : null;
+
+    state.inventory.forEach((sword, idx) => {
+        const slot = document.createElement('div');
+        const isSel = state.selectedSlot === idx;
+        const canMerge = selSword && sword && state.selectedSlot !== idx && selSword.tier === sword.tier;
+
+        slot.className = `slot-card h-22 rounded-xl border flex flex-col items-center justify-center relative cursor-pointer p-1 ${
+            sword ? 'bg-slate-900 border-slate-700 hover:border-slate-500' : 'bg-slate-900/40 border-slate-800/80 border-dashed'
+        } ${isSel ? 'slot-selected' : ''} ${canMerge ? 'slot-merge-ready' : ''}`;
+
+        slot.onclick = () => handleSlotClick(idx);
+
+        if (sword) {
+            slot.draggable = true;
+            slot.ondragstart = () => { dragSourceIdx = idx; };
+        }
+        slot.ondragover = e => e.preventDefault();
+        slot.ondrop = e => {
+            e.preventDefault();
+            if (dragSourceIdx !== null && dragSourceIdx !== idx) {
+                const src = state.inventory[dragSourceIdx];
+                const dst = state.inventory[idx];
+                if (src && dst && src.tier === dst.tier) mergeSwords(dragSourceIdx, idx);
+                else if (src && !dst) {
+                    state.inventory[idx] = src;
+                    state.inventory[dragSourceIdx] = null;
+                    if (state.selectedSlot === dragSourceIdx) state.selectedSlot = idx;
+                    autoEquipCheck();
+                    updateAllUI();
+                }
+            }
+            dragSourceIdx = null;
+        };
+
+        if (sword) {
+            const info = SWORD_DATA[sword.tier - 1];
+            const pInfo = PREFIX_DATA[sword.prefix || 'normal'];
+            const isEq = state.equippedSlot === idx;
+            slot.innerHTML = `
+                <span class="absolute top-1 left-1.5 text-[10px] font-black text-slate-400">T${sword.tier}</span>
+                ${isEq ? '<span class="absolute top-1 right-1 text-[9px] bg-amber-500/20 text-amber-300 px-1 rounded font-bold">장착</span>' : ''}
+                ${canMerge ? '<span class="absolute bottom-1 right-1 text-[9px] bg-emerald-500 text-slate-950 px-1 rounded font-black animate-pulse">합성</span>' : ''}
+                <div class="w-11 h-11 flex items-center justify-center my-0.5">${getSwordSvg(sword.tier, sword.plus)}</div>
+                <div class="text-[10px] font-extrabold ${sword.plus > 0 ? 'text-amber-400' : pInfo.color} truncate max-w-full">
+                    ${sword.plus > 0 ? `+${sword.plus} ` : ''}${pInfo.name !== '일반' ? pInfo.name : info.name.slice(0, 5)}
+                </div>
+            `;
+        } else {
+            slot.innerHTML = `<span class="text-slate-700 text-xs">+</span>`;
+        }
+        grid.appendChild(slot);
+    });
+}
+
+function renderSelectedPanel() {
+    const noSel = document.getElementById('noSelectionState');
+    const actSel = document.getElementById('swordActionState');
+
+    if (state.selectedSlot === null || !state.inventory[state.selectedSlot]) {
+        noSel.classList.remove('hidden');
+        actSel.classList.add('hidden');
+        return;
+    }
+
+    noSel.classList.add('hidden');
+    actSel.classList.remove('hidden');
+
+    const sword = state.inventory[state.selectedSlot];
+    const info = SWORD_DATA[sword.tier - 1];
+    const stats = getSwordStats(sword);
+    const rates = getEnhanceRates(sword);
+
+    document.getElementById('enhanceStreakText').textContent = `${state.enhanceStreak}연승`;
+    document.getElementById('overdriveBonusText').textContent = rates.streakBonus > 0
+        ? `🔥 열기 보너스 성공률 +${rates.streakBonus}% 적용 중!`
+        : "연속 성공 시 확률 보너스 누적";
+
+    document.getElementById('selSvgBox').innerHTML = getSwordSvg(sword.tier, sword.plus);
+    document.getElementById('selTierBadge').textContent = `${sword.tier}단계`;
+
+    const pBadge = document.getElementById('selPrefixBadge');
+    pBadge.textContent = stats.prefixInfo.name;
+    pBadge.className = `px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-black ${stats.prefixInfo.color}`;
+
+    document.getElementById('selName').textContent = `${sword.plus > 0 ? `+${sword.plus} ` : ''}${info.name}`;
+    document.getElementById('selAtk').textContent = formatNumber(stats.atk);
+    document.getElementById('selHp').textContent = formatNumber(stats.hp);
+    document.getElementById('selOptionDesc').textContent = `특수효과: ${stats.prefixInfo.desc}`;
+    document.getElementById('selSellPrice').textContent = `+${formatNumber(stats.sellPrice)}G`;
+    document.getElementById('selSalvageGain').textContent = `+${stats.salvageShards}🧩`;
+
+    document.getElementById('enhSuccessRate').textContent = `${rates.success}%`;
+    document.getElementById('enhFailPenalty').textContent = rates.penaltyText;
+    document.getElementById('enhDestroyRate').textContent = `${rates.destroy}%`;
+    document.getElementById('enhCostText').textContent = `${formatNumber(stats.enhanceCost)} G`;
+}
+
+function renderResearchTab() {
+    document.getElementById('soulStoneList').innerHTML = SOUL_STONE_CONFIGS.map(cfg => {
+        const lv = state.soulStones[cfg.id] || 0;
+        const isMax = lv >= cfg.max;
+        const cost = cfg.baseCost + lv * 2;
+        return `
+            <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1">
+                        <span class="text-sm">${cfg.icon}</span>
+                        <span class="font-black text-xs text-slate-100 truncate">${cfg.name}</span>
+                        <span class="text-[10px] px-1 rounded bg-slate-800 text-cyan-300 font-bold shrink-0">Lv.${lv}/${cfg.max}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5 truncate">${cfg.desc}</p>
+                    <p class="text-[10px] text-emerald-400 font-bold">${cfg.val(lv)}</p>
+                </div>
+                <button onclick="upgradeSoulStone('${cfg.id}')" ${isMax ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg font-black text-[11px] shrink-0 ${
+                    isMax ? 'bg-slate-800 text-slate-500' : 'bg-rose-600 hover:bg-rose-500 text-white'
+                }">${isMax ? 'MAX' : `${cost} 🧩`}</button>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('upgradeList').innerHTML = UPGRADE_CONFIGS.map(cfg => {
+        const lv = state.upgrades[cfg.id];
+        const isMax = lv >= cfg.max;
+        const cost = Math.floor(cfg.base * Math.pow(cfg.mult, lv));
+        return `
+            <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-xs text-slate-100">${cfg.name}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-400 font-bold">Lv.${lv}/${cfg.max}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">${cfg.desc}</p>
+                    <p class="text-[11px] text-emerald-400 font-semibold">현재: ${cfg.val(lv)}</p>
+                </div>
+                <button onclick="buyUpgrade('${cfg.id}')" ${isMax ? 'disabled' : ''} class="px-3 py-2 rounded-xl font-black text-xs shrink-0 ${
+                    isMax ? 'bg-slate-800 text-slate-500' : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                }">${isMax ? 'MAX' : `${formatNumber(cost)} G`}</button>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('skillUpgradeList').innerHTML = SKILL_CONFIGS.map((sk, idx) => {
+        const lv = state.skillLevels[idx];
+        const cost = Math.floor(420 * Math.pow(2.25, lv - 1));
+        return `
+            <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <div>
+                    <div class="font-bold text-xs text-cyan-300">${sk.name} <span class="text-amber-400">Lv.${lv}</span></div>
+                    <p class="text-[11px] text-slate-400">${sk.desc}</p>
+                </div>
+                <button onclick="upgradeSkill(${idx})" class="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs shrink-0">
+                    ${formatNumber(cost)} G
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('ownedTacticalList').innerHTML = TACTICAL_CARDS.map(card => {
+        const st = state.tacticalBuffs[card.id] || 0;
+        return `
+            <div class="p-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2 ${st === 0 ? 'opacity-50' : ''}">
+                <span class="text-lg">${card.icon}</span>
+                <div class="min-w-0">
+                    <div class="font-bold text-[11px] text-slate-200 truncate">${card.name} (${st})</div>
+                    <div class="text-[10px] text-emerald-400 font-semibold">${st > 0 ? card.perStack(st) : '미획득'}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderRelicsTab() {
+    document.getElementById('achievementList').innerHTML = ACHIEVEMENTS.map(ach => {
+        const done = ach.check(state);
+        return `
+            <div class="p-2.5 rounded-xl border flex items-center justify-between ${done ? 'bg-amber-950/20 border-amber-500/50' : 'bg-slate-950/60 border-slate-800 opacity-60'}">
+                <div>
+                    <div class="text-xs font-black ${done ? 'text-amber-300' : 'text-slate-400'}">${done ? '🏅' : '🔒'} ${ach.name}</div>
+                    <div class="text-[10px] text-slate-400">${ach.desc}</div>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-900 text-emerald-400 shrink-0">${ach.bonusText}</span>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('relicList').innerHTML = RELIC_CONFIGS.map(r => {
+        const lv = state.relics[r.id];
+        return `
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center gap-2.5 ${lv === 0 ? 'opacity-60' : ''}">
+                <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-2xl shrink-0">${r.icon}</div>
+                <div class="min-w-0">
+                    <div class="font-bold text-xs text-purple-300">${r.name} <span class="text-amber-400">Lv.${lv}</span></div>
+                    <p class="text-[10px] text-slate-400 truncate">${r.desc}</p>
+                    <p class="text-[10px] text-emerald-400 font-bold">레벨당: ${r.perLv}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('codexProgressBadge').textContent = `${state.unlockedTiers.length} / ${SWORD_DATA.length} 수집`;
+    document.getElementById('codexList').innerHTML = SWORD_DATA.map(item => {
+        const unlocked = state.unlockedTiers.includes(item.tier);
+        return `
+            <div class="p-2 rounded-xl border flex items-center gap-2 ${unlocked ? 'bg-slate-950 border-slate-700' : 'bg-slate-950/40 border-slate-800/50 opacity-50'}">
+                <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center p-1 shrink-0">
+                    ${unlocked ? getSwordSvg(item.tier, 0) : '<span class="text-base">❓</span>'}
+                </div>
+                <div class="min-w-0">
+                    <div class="text-[11px] font-bold text-slate-200 truncate">${item.tier}단계 · ${unlocked ? item.name : '미발견'}</div>
+                    <div class="text-[10px] text-slate-400">
+                        ${unlocked ? `⚔️${formatNumber(item.baseAtk)} / ❤️${formatNumber(item.baseHp)}` : '합성으로 발견 시 💎 보상'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderDungeonTab() {
+    updateGambleUI();
+    document.getElementById('goldDungeonTicket').textContent = `입장권: ${state.dungeonTickets.gold}/3`;
+    document.getElementById('shardDungeonTicket').textContent = `입장권: ${state.dungeonTickets.shard}/3`;
+
+    const gain = getPrestigeGain();
+    document.getElementById('prestigeGainText').textContent = `+${gain} 🔮`;
+    const btn = document.getElementById('doPrestigeBtn');
+    btn.disabled = gain <= 0;
+    btn.textContent = gain > 0 ? `🔮 지금 초월하고 초월석 +${gain}개 획득` : `🔮 초월 실행하기 (스테이지 10 이상 필요)`;
+
+    const pItems = [
+        { key: 'atkMult',  name: "초월의 파괴력", desc: "모든 검의 공격력 +25% 영구 증가", lv: state.prestigeUpgrades.atkMult,  cost: 2 + state.prestigeUpgrades.atkMult * 2 },
+        { key: 'hpMult',   name: "초월의 생명력", desc: "플레이어 최대 HP +25% 영구 증가", lv: state.prestigeUpgrades.hpMult,   cost: 2 + state.prestigeUpgrades.hpMult * 2 },
+        { key: 'goldMult', name: "초월의 황금운", desc: "몬스터 처치 골드 +30% 영구 증가", lv: state.prestigeUpgrades.goldMult, cost: 2 + state.prestigeUpgrades.goldMult * 2 }
+    ];
+
+    document.getElementById('prestigeUpgradeList').innerHTML = pItems.map(it => `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-xs">
+            <div>
+                <div class="font-bold text-slate-200">${it.name} <span class="text-purple-400">Lv.${it.lv}</span></div>
+                <div class="text-[11px] text-slate-400">${it.desc}</div>
+            </div>
+            <button onclick="buyPrestigeUpgrade('${it.key}')" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold">
+                ${it.cost} 🔮
+            </button>
+        </div>
+    `).join('');
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (container.children.length >= 4) container.firstChild.remove();
+    const toast = document.createElement('div');
+    const colors = {
+        success: 'bg-emerald-950/95 border-emerald-500 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500 text-rose-200',
+        info: 'bg-slate-900/95 border-amber-500/60 text-amber-200'
+    };
+    toast.className = `px-3.5 py-2 rounded-xl border text-xs font-bold shadow-xl backdrop-blur transition-all duration-300 ${colors[type]}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 2200);
+}
+
+function triggerFlash(color) {
+    const fl = document.getElementById('flashLayer');
+    fl.style.backgroundColor = color;
+    fl.style.opacity = '1';
+    setTimeout(() => { fl.style.opacity = '0'; }, 90);
+}
+
+function triggerScreenShake() {
+    const root = document.getElementById('appRoot');
+    root.classList.remove('shake-screen');
+    void root.offsetWidth;
+    root.classList.add('shake-screen');
+}
+
+/**
+ * ============================================================================
+ * 11. 저장 / 오프라인 보상 / requestAnimationFrame 고정 델타타임 엔진
+ * ============================================================================
+ */
+const SAVE_KEY = 'legendary_blacksmith_legend_v5';
+
+function saveGame(manual = false) {
+    try {
+        state.lastSaveTime = Date.now();
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        if (manual) showToast("💾 게임이 저장되었습니다!", "success");
+    } catch (e) {}
+}
+
+function loadGame() {
+    try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            state = {
+                ...DEFAULT_STATE,
+                ...parsed,
+                upgrades: { ...DEFAULT_STATE.upgrades, ...(parsed.upgrades || {}) },
+                soulStones: { ...DEFAULT_STATE.soulStones, ...(parsed.soulStones || {}) },
+                relics: { ...DEFAULT_STATE.relics, ...(parsed.relics || {}) },
+                tacticalBuffs: { ...DEFAULT_STATE.tacticalBuffs, ...(parsed.tacticalBuffs || {}) },
+                prestigeUpgrades: { ...DEFAULT_STATE.prestigeUpgrades, ...(parsed.prestigeUpgrades || {}) },
+                dungeonTickets: { ...DEFAULT_STATE.dungeonTickets, ...(parsed.dungeonTickets || {}) }
+            };
+
+            const today = new Date().toDateString();
+            if (state.dungeonTickets.lastResetDay !== today) {
+                state.dungeonTickets = { gold: 3, shard: 3, lastResetDay: today };
+            }
+
+            const elapsedSec = Math.min(14400, Math.floor((Date.now() - (parsed.lastSaveTime || Date.now())) / 1000));
+            if (elapsedSec >= 60) {
+                const offlineGold = Math.floor(elapsedSec * 5 * Math.pow(1.36, state.stage - 1));
+                state.gold += offlineGold;
+                setTimeout(() => showToast(`🌙 오프라인 휴식 보상 획득! (+${formatNumber(offlineGold)} G)`, "success"), 600);
+            }
+        }
+    } catch (e) {}
+}
+
+function hardResetGame() {
+    if (!confirmResetFlag) {
+        confirmResetFlag = true;
+        showToast("⚠️ 정말 초기화하려면 한 번 더 클릭하세요!", "error");
+        setTimeout(() => { confirmResetFlag = false; }, 3000);
+        return;
+    }
+    localStorage.removeItem(SAVE_KEY);
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    confirmResetFlag = false;
+    lastEquippedSignature = "";
+    lastMonsterVisualSig = "";
+    spawnMonster(false, null);
+    closeModal('settingsModal');
+    updateAllUI();
+    showToast("데이터가 완전히 초기화되었습니다.", "info");
+}
+
+let autoAtkTimer = 0;
+let regenTimer = 0;
+let autoSaveTimer = 0;
+let uiSyncTimer = 0;
+let lastFrameTime = performance.now();
+
+function gameLoop(now) {
+    // 탭 전환 복귀 시 델타타임 폭증 방지 (최대 0.25초로 클램핑)
+    const dt = Math.min(0.25, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
+
+    // 파티클 캔버스 렌더링
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * (dt * 60);
+        p.y += p.vy * (dt * 60);
+        p.vy += 0.25 * (dt * 60);
+        p.life -= p.decay * (dt * 60);
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+        fxCtx.globalAlpha = p.life;
+        fxCtx.fillStyle = p.color;
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        fxCtx.fill();
+    }
+    fxCtx.globalAlpha = 1;
+
+    // 피격 잔상 HP 바 부드러운 추적
+    if (monster.ghostHp > monster.hp) {
+        const diff = monster.ghostHp - monster.hp;
+        monster.ghostHp = Math.max(monster.hp, monster.ghostHp - Math.max(monster.maxHp * 0.4 * dt, diff * 4.5 * dt));
+    } else {
+        monster.ghostHp = monster.hp;
+    }
+
+    for (let i = 0; i < 3; i++) {
+        if (skillCooldowns[i] > 0) skillCooldowns[i] = Math.max(0, skillCooldowns[i] - dt);
+    }
+    if (berserkTimeLeft > 0) berserkTimeLeft = Math.max(0, berserkTimeLeft - dt);
+    if (feverTimeLeft > 0) feverTimeLeft = Math.max(0, feverTimeLeft - dt);
+
+    if (comboCount > 0) {
+        comboResetTimer -= dt;
+        if (comboResetTimer <= 0) comboCount = 0;
+    }
+
+    // 체력 자연 재생
+    regenTimer += dt;
+    if (regenTimer >= 1.0) {
+        regenTimer -= 1.0;
+        const maxHp = getPlayerMaxHp();
+        const basePct = 0.012 + state.upgrades.regenLv * 0.0045 + state.relics.phoenix * 0.01;
+
+        if (state.isDefeated || state.isResting) {
+            healPlayer(Math.max(6, Math.floor(maxHp * 0.13)), false);
+            if (state.isDefeated && state.playerHp >= maxHp * 0.85) {
+                state.isDefeated = false;
+                showToast("⚔️ 체력 회복 완료! 전투에 복귀합니다!", "success");
+            } else if (state.isResting && state.playerHp >= maxHp) {
+                state.isResting = false;
+                showToast("⚔️ 체력 100% 회복! 전투를 재개합니다!", "success");
+            }
+        } else {
+            healPlayer(Math.max(1, Math.floor(maxHp * basePct)), false);
+        }
+    }
+
+    // 전투 진행
+    if (!state.isDefeated && !state.isResting && !monster.isDying) {
+        if (state.autoSkill) {
+            for (let i = 0; i < 3; i++) {
+                if (skillCooldowns[i] <= 0) {
+                    if (i === 1 && state.playerHp > getPlayerMaxHp() * 0.8) continue;
+                    castSkill(i);
+                    break;
+                }
+            }
+        }
+
+        let atkInterval = comboCount >= 100 ? 0.65 : 0.85;
+        if (feverTimeLeft > 0) atkInterval *= 0.5; // 피버 모드 공속 2배!
+
+        autoAtkTimer += dt;
+        if (autoAtkTimer >= atkInterval) {
+            autoAtkTimer = 0;
+            playerAttackMonster(1.0, false);
+        }
+
+        monster.atkGauge += dt * 60;
+        if (monster.isBoss && monster.atkGauge >= 65 && !monster.isChargingHeavy) {
+            monster.isChargingHeavy = true;
+        }
+        if (monster.atkGauge >= 100) {
+            monster.atkGauge = 0;
+            monsterCounterAttack();
+        }
+
+        if (monster.isBoss || monster.dungeonType || monster.isTreasureGoblin) {
+            monster.timer -= dt;
+            if (monster.timer <= 0) {
+                showToast(
+                    monster.isTreasureGoblin ? "💨 황금 보물 고블린이 보물을 챙겨 도망쳤습니다!" : "⏳ 제한 시간 초과! 공략에 실패했습니다.",
+                    "error"
+                );
+                spawnMonster(false, null);
+            }
+        }
+    }
+
+    uiSyncTimer += dt;
+    if (uiSyncTimer >= 0.08) {
+        uiSyncTimer = 0;
+        updateBattleUI();
+    }
+
+    autoSaveTimer += dt;
+    if (autoSaveTimer >= 15) {
+        autoSaveTimer = 0;
+        saveGame(false);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+window.onload = function () {
+    loadGame();
+    document.getElementById('soundToggleBtn').textContent = state.soundEnabled ? '🔊 ON' : '🔇 OFF';
+    autoEquipCheck();
+    if (!state.playerHp || state.playerHp <= 0) state.playerHp = getPlayerMaxHp();
+    spawnMonster(false, null);
+    updateAllUI();
+    lastFrameTime = performance.now();
+    requestAnimationFrame(gameLoop);
+};
+</script>
+</body>
+</html>
